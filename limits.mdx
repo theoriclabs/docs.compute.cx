@@ -1,28 +1,36 @@
 ---
 title: Limits
-description: Ten-minute default timeout, one fresh machine, no SSH.
+description: Fresh machine per run. 10-minute default. You do not log into the box.
 ---
 
-Early access is capped. Admission, concurrent runs, and spend limits can reject a create even when you have credit. `compute doctor` and the API error footer carry a **request id**.
+These are the v0.1 customer limits. They can tighten without a docs deploy — treat API errors as authoritative.
 
 ## Runtime
 
-| Limit | Value |
+| Limit | v0.1 |
 |---|---|
-| Default timeout | 10 minutes (`--timeout 600`) |
-| Maximum timeout | 24 hours |
-| GPUs per run | **1** — no multi-GPU shapes |
-| Machine | **Fresh** for that run. No idle pool, no leftover disk |
-| SSH | **None.** There is no customer shell on the box |
+| Function timeout | **10 minutes** default / cap |
+| Machine lifetime | One run. New VM each create. |
+| Concurrency | Capped (often one active machine / run per user) |
+| Create rate | Capped (hourly) |
 
-Payloads, results, and archived logs are deleted after **30 days**.
+`timeout=` on `@app.function` is seconds. Do not plan hour-long jobs on the public path.
 
-## What you should not expect
+## What you get
 
-- A public REST “Try it” console
-- PyPI (`pip install compute`) as the install path
-- Persistent volumes or checkpoint resume
-- Community/spot SKUs, A100, or 4090 in the public catalog
-- The dashboard as a job launcher
+- One GPU SKU from `compute gpu list`.
+- One process: your function.
+- Logs and a JSON return value.
+- A receipt after terminate.
 
-If a create is rejected, the CLI prints an error code (`insufficient_funds`, admission, timeout, and so on). Do not retry in a tight loop.
+## What you do not get
+
+- A login shell on the machine.
+- A machine that stays up between runs.
+- A region or instance-template picker.
+- Persistent disks.
+- A dashboard “Run” button — launch from the CLI.
+
+## Admission
+
+Public admission can still refuse new creates. That is a cap, not an outage. If you are blocked, send the request id from the error to [Support](/support).

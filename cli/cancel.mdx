@@ -1,14 +1,22 @@
 ---
 title: Cancel
-description: Stop a queued, booting, preparing, or running job.
+description: Request teardown. Confirm the machine is gone.
 ---
 
 ```bash
 compute cancel <run_id>
+compute machines
 ```
 
-You can cancel while the run is `queued`, `provisioning`, `booting`, `preparing`, or `running`.
+Cancel asks the control plane to stop the run and terminate the machine. `compute machines` should be empty after teardown.
 
-Minutes already started on a ready machine still appear on the receipt. Cancel does not unwind prepaid credit you already spent.
+Teardown is part of the product. If a run is still listed as active and `machines` is not empty, keep the run id and [contact support](/support).
 
-If the provider machine is still listed after a cancel, wait for teardown. `compute machines` shows live boxes tied to your account. Do not SSH — there is no customer SSH.
+You can also inspect:
+
+```bash
+compute runs status <run_id>
+compute runs receipt <run_id>
+```
+
+Receipts include started minutes even when you cancel after the machine started.

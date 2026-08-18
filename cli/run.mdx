@@ -1,30 +1,62 @@
 ---
-title: compute run
-description: Create one run on a fresh machine. Default is fire-and-forget.
+title: Run
+description: Upload a Python file, enqueue a function, optionally wait for JSON.
 ---
 
 ```bash
-compute run path/to/file.py::fn --gpu H100-SXM --wait
+compute run <file.py>::<function> --gpu <sku> [options]
 ```
 
-The entry point is `file.py::function_name`. The function must return JSON-serializable data.
+Example:
 
-## Flags that matter
+```bash
+compute run simple_mlp.py::train --gpu H100-SXM --wait --yes
+```
 
-| Flag | What it does |
+`--gpu H100` is an alias for `H100-SXM`. `--gpu MI300X` is the AMD SKU (stock can be tight).
+
+## Flags
+
+| Flag | Meaning |
 |---|---|
-| `--gpu SKU` | `H100-SXM`, `H100` (alias), `MI300X`, or `auto` / `fastest` / `cheapest` |
-| `--provider` | `runpod` or `hotaisle` — pin the catalog when a SKU exists on one side |
-| `--dry-run` | Print the packed file set. No upload, no run, no charge |
-| `--wait` | Stream logs until the run finishes |
-| `--yes` | Skip confirmation |
-| `--timeout N` | Execution timeout in seconds. Default **600** (10 minutes). Max **86400** (24 hours) |
-| `--args '{...}'` | JSON object of keyword arguments for the function |
-| `--json` | Machine-readable CLI output |
+| `--gpu` | SKU. Required unless the `@app.function` decorator already set one. |
+| `--provider` | Optional pin (`runpod`, `hotaisle`). Usually omit. |
+| `--wait` | Stream until terminal; print JSON result. Default is detach after create. |
+| `--timeout` | Function timeout in seconds. Default **600** (10 minutes). |
+| `--args` | JSON object for function kwargs. |
+| `--dry-run` | Print the upload plan. No upload, no machine. |
+| `--yes` | Skip interactive confirmation. |
+| `--json` | (global) machine-readable envelope. |
 
-Default without `--gpu` follows the `@app.function(gpu=...)` decorator, or Hot Aisle **MI300X** if the decorator is silent. For public self-service, pass **`--gpu H100-SXM`** explicitly.
+`compute run --help` is the live flag list.
 
-## After create
+## What happens
+
+1. The CLI packages the target file (and what it imports from the project).
+2. The API enqueues a run if admission and credit allow it.
+3. A worker provisions a **new** machine, installs the image, runs the function, streams logs, then **terminates** the machine.
+4. You get a JSON return value, a receipt, and an empty `compute machines` list.
+
+## Provider vs SKU
+
+You pick a GPU name. Compute picks the provider unless you pass `--provider`. You do not pick a region or an instance template.
+
+## Detached vs wait
+
+```bash
+# prints run_id and exits
+compute run train.py::main --gpu H100-SXM --yes
+
+# later
+compute runs status <run_id>
+compute logs <run_id> -f
+compute runs result <run_id>
+compute runs receipt <run_id>
+```
+
+Or do it in one shot with `--wait`.
+
+## Inspect
 
 ```bash
 compute runs list
@@ -33,6 +65,4 @@ compute runs result <run_id>
 compute runs receipt <run_id>
 ```
 
-Cancel with `compute cancel <run_id>`. Follow logs with `compute logs <run_id> --follow`.
-
-The dashboard lists the same runs. It does not start them.
+`result` is the function return value. `receipt` is billed minutes and the platform fee (see [Billing](/billing)).

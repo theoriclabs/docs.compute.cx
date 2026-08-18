@@ -1,29 +1,41 @@
 ---
 title: GPU list
-description: Live SKUs and locked hourly rates. Trust this over a screenshot.
+description: Locked public SKUs and list rates. H100-SXM is the lead.
 ---
 
 ```bash
 compute gpu list
+compute gpu list --json
 ```
 
-That is the catalog you can launch against right now. Rates are cents per hour and can change.
+That output is the source of truth for names and **list ¢/hr**. Marketing pages can lag.
 
-## What we launch today
+## v0.1 SKUs
 
-| You type | Machine | Provider |
-|---|---|---|
-| `H100-SXM` or `H100` | RunPod Secure H100-SXM | `runpod` |
-| `MI300X` | Hot Aisle MI300X | `hotaisle` |
+| Name | Also accepted | Provider | Role |
+|---|---|---|---|
+| `H100-SXM` | `H100`, `H100-80GB` | RunPod Secure | Public lead |
+| `MI300X` | — | Hot Aisle | AMD; stock can be tight |
 
-`--gpu H100` and `--gpu H100-80GB` normalize to **H100-SXM**.
+Do not assume A100, consumer cards, community pools, or interruptible SKUs from this manual. If `gpu list` does not show it, do not pass it.
 
-## Policies
+## Decorator vs CLI
 
-`compute run --gpu auto|fastest|cheapest` picks from the live catalog. `auto` balances time and cost. You can still pass `--provider runpod` or `--provider hotaisle` to stay on one side.
+```python
+@app.function(gpu="H100-80GB", image=compute.Image.cuda_pytorch(), timeout=600)
+```
 
-If the selector would fall back to a different SKU than you asked for, the CLI asks before creating the run. `--allow-selector-fallback` / `--yes` accepts that without a prompt.
+```bash
+compute run train.py::main --gpu H100-SXM
+```
 
-## What is not in the public catalog
+The CLI `--gpu` flag wins when both are set.
 
-A100, 4090, Community/spot shapes, and multi-GPU are not a v0.1 launch path. If `gpu list` does not show a SKU, do not assume `compute run` will get it.
+## Images
+
+- NVIDIA: `compute.Image.cuda_pytorch()`
+- AMD: `compute.Image.rocm_pytorch()`
+
+Use the image that matches the SKU. Mixing CUDA images onto MI300X (or the reverse) is a failed run, not a silent fallback.
+
+Rates: [Pricing](https://compute.cx/pricing). Caps: [Limits](/limits).

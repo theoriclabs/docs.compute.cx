@@ -1,18 +1,23 @@
 ---
 title: Logs
-description: Text or JSONL. Follow until the run is terminal.
+description: Follow a run from another terminal. Default run detaches.
 ---
 
 ```bash
 compute logs <run_id>
-compute logs <run_id> --follow
-compute logs <run_id> --format jsonl
+compute logs <run_id> -f
 ```
 
-`--follow` / `-f` streams until the run reaches a terminal status.
+`-f` follows until the run is terminal.
 
-`--format text` is the default. `--format jsonl` is the same stream as `GET /v1/runs/:id/logs?format=jsonl`.
+Without `--wait` on `compute run`, the CLI exits after create. Open another terminal and follow logs there.
 
-Logs are kept with the run for **30 days**, then deleted. Do not treat Compute as the only copy of output you care about.
+```bash
+compute run train.py::main --gpu H100-SXM --yes
+# note the run_id
+compute logs <run_id> -f
+```
 
-The CLI does not print your source, secrets, or API keys in log output.
+`--wait` on `run` already streams status (and logs when present). Use `logs -f` when you detached.
+
+`compute runs status <run_id>` is the state machine. `logs` is the stream.

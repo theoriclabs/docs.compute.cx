@@ -1,6 +1,6 @@
 ---
 title: Credits
-description: Prepaid balance. $10 minimum top-up. Stripe holds the card.
+description: Prepaid USD. $10 minimum Checkout. Balance is after the webhook, not at tab-open.
 ---
 
 ```bash
@@ -8,21 +8,22 @@ compute credits
 compute credits add 10
 ```
 
-`credits` prints the spendable balance. `credits add` opens Stripe Checkout for WOW21, Inc. The amount is in **dollars**. The minimum is **$10**.
+`add` opens Stripe Checkout. Minimum is **$10**. After you pay, wait for the webhook and re-check `compute credits`. A pending Checkout does not add spendable balance.
 
-You can also top up on [Credits](https://compute.cx/credits).
+The [dashboard credits page](https://compute.cx/credits) shows the same ledger.
 
 ## How spend works
 
-- You pay before the run, not at the end of the month.
-- Usage is metered in **started machine minutes** after the box is ready.
-- A machine that never becomes ready is **$0**.
-- The locked provider rate plus the platform fee are on the receipt. Fee tiers live on [pricing](https://compute.cx/pricing) — do not copy a percentage from an old post.
+You buy credit first. A run is refused if the hold would exceed remaining credit or a spend cap.
+
+Billing is **started minutes** while the machine exists, plus the platform fee on that usage. Failed boots that never start the machine are **$0**. See [Billing](/billing).
+
+Do not copy a fee percentage from this page. Use [Pricing](https://compute.cx/pricing) and `compute runs receipt <run_id>`.
+
+## Usage
 
 ```bash
 compute usage
-compute usage --month 2026-08
-compute runs receipt <run_id>
 ```
 
-There are no automatic refunds. If a charge looks wrong, keep the **run id** or **request id** and write [privacy@theoric.com](mailto:privacy@theoric.com) (billing questions can use the same inbox until a dedicated support address exists).
+Per-run lines: GPU minutes, platform fee, total.

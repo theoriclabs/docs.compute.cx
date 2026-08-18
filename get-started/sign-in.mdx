@@ -9,29 +9,32 @@ description: Browser sign-in writes a local credential. CI uses a revocable API 
 compute setup
 ```
 
-The CLI starts a device flow, opens (or prints) a URL on [compute.cx](https://compute.cx), and waits for you to approve the device.
+The CLI starts a device login, opens (or prints) a URL on [compute.cx](https://compute.cx), and waits for Approve.
 
-On success it writes `~/.compute/config.toml` with mode `0600`. The file holds a session token. Do not commit it. Do not paste it into chat.
+On success it writes `~/.compute/config.toml` with mode `0600`. The token is never rendered in the approval page HTML.
 
-`compute doctor --json` shows a sanitized identity after setup.
+```bash
+compute doctor --json
+```
 
-If you already have a dashboard session in the same browser, approve the CLI device and continue.
+Use this to confirm you are signed in without dumping secrets.
 
 ## CI (`COMPUTE_API_KEY`)
 
-1. Sign in on [compute.cx](https://compute.cx/sign-in).
-2. Open [API keys](https://compute.cx/keys).
-3. Create a key. The secret is shown **once**.
-4. Export it in the environment that runs `compute`:
+1. Sign in on the [dashboard](https://compute.cx/runs).
+2. Create a key under [API keys](https://compute.cx/keys). The secret is shown once.
+3. Export it in the environment:
 
 ```bash
-export COMPUTE_API_KEY=ck_live_…
+export COMPUTE_API_KEY='ck_live_…'
 ```
 
-The environment variable wins over the config file. Revoke a leaked key from the same page.
+The env var wins over `config.toml`. Revoke the key from the dashboard when the job is done.
 
-## Sign-out / rotate
+## Dashboard
 
-Delete `~/.compute/config.toml` or revoke the session/key from the dashboard. After revoke, new API calls should fail. If a request still works after ~10 seconds, treat that as a bug and include the request id from the error footer.
+The website is for keys, credits, usage, and watching runs. **Create runs from the CLI**, not from the dashboard.
 
-Next: [First run](/get-started/first-run).
+## Next
+
+Add prepaid credit, then [run a function](/get-started/first-run).
