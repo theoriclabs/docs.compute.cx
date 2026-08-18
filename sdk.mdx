@@ -1,45 +1,41 @@
 ---
-title: SDK (Python)
-description: App, Image, @app.function, and .remote(). The CLI is how you launch.
+title: Python SDK
+description: App, Image, @app.function, and .remote(). Same HTTPS path as the CLI.
 ---
 
-The Python package you write against is the same one the CLI uploads.
+Install the CLI wheel first (`curl | sh`). That environment already has the `compute` package.
 
 ```python
 import compute
 
-app = compute.App("my-job")
+app = compute.App("simple-mlp")
 image = compute.Image.cuda_pytorch()
 
 
-@app.function(gpu="H100-80GB", image=image, timeout=600)
+@app.function(gpu="H100-SXM", image=image, timeout=600)
 def train(steps: int = 40) -> dict:
-    # imports that need the GPU image go inside the function
-    return {"ok": True, "steps": steps}
+    import torch
+
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    x = torch.randn(32, 8, device=device)
+    return {"ok": True, "device": str(device), "mean": float(x.mean())}
+
+
+if __name__ == "__main__":
+    with app.run():
+        print(train.remote(steps=40))
 ```
 
-Then:
+`.remote()` packs the function, uploads, creates a run on `/v1`, and waits for the result. It is not a local thread.
+
+`gpu="H100"` or `gpu="H100-80GB"` normalize to **H100-SXM**.
+
+You can also launch the same file from the CLI:
 
 ```bash
 compute run train.py::train --gpu H100-SXM --wait
 ```
 
-## Surface that is documented
-
-| Symbol | Role |
-|---|---|
-| `compute.App(name)` | Names the app in the upload. |
-| `compute.Image.cuda_pytorch()` | NVIDIA / H100 image. |
-| `compute.Image.rocm_pytorch()` | AMD / MI300X image. |
-| `@app.function(...)` | Marks the entrypoint. `gpu`, `image`, `timeout`. |
-| `fn.remote(**kwargs)` | In-script call shape. Args and return must be JSON. |
-
-Put GPU-only imports **inside** the function so local dry-runs and packaging stay honest.
-
 ## Not in this manual
 
-Do not treat local process spawning, detached handles you wait on later, persistent disks, or extra decorators as supported customer API. If it is not in the table above, do not build a workflow on it.
-
-## Timeout
-
-Decorator `timeout=` is seconds on the function. The v0.1 public default / cap is **10 minutes**. See [Limits](/limits).
+`.spawn()`, custom images beyond `Image.cuda_pytorch()`, volumes, and retries are not the public v0.1 path. If you see them in `--help` or the package, treat them as unsupported here until this page says otherwise.

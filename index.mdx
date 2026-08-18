@@ -1,59 +1,52 @@
 ---
 title: Introduction
-description: One CLI. A fresh GPU machine per run. Prepaid credit, billed while the machine exists.
+description: One CLI. A fresh GPU for each run. Prepaid credit, billed while the machine exists.
 ---
 
-Compute runs a Python function on a newly provisioned cloud GPU, streams output to your terminal, returns JSON, and confirms the machine is gone.
+Compute runs a Python function on a **new** cloud GPU, streams output to your terminal, then confirms the machine is gone.
 
-You do not manage images, keep-alive pools, or a login to the box. The machine exists for one run.
+You do not keep a box running between jobs. There is no idle pool. The dashboard shows keys, credit, and past runs — it does not launch work.
+
+<Info>
+  Early access. Public GPU self-service starts with **RunPod Secure H100-SXM**. **MI300X** (Hot Aisle) is limited. Admission, concurrency, and spend are capped. This is not an SLO.
+</Info>
 
 ## What you do
 
-```bash
-curl -fsSL https://compute.cx/install.sh | sh
-compute setup
-compute credits add 10
-compute run train.py::main --gpu H100-SXM --wait
-```
+1. Install the CLI from [compute.cx](https://compute.cx/quickstart).
+2. Sign in in the browser (`compute setup`).
+3. Add prepaid credit (`compute credits add 10` — $10 minimum).
+4. Run a function: `compute run train.py::main --gpu H100-SXM --wait`.
 
-`--gpu H100` is an alias for **H100-SXM**.
+The [quickstart](https://compute.cx/quickstart) is the three-command funnel. This site is the manual.
 
-The three-command funnel (install → setup → run) also lives on [compute.cx/quickstart](https://compute.cx/quickstart). This site is the manual.
+## What a run is
 
-## What is live
-
-| Surface | Status |
+| Step | What happens |
 |---|---|
-| Install (`curl\|sh`) | Live |
-| Sign-in + `compute setup` | Live |
-| Prepaid credits | Live — $10 minimum |
-| RunPod Secure **H100-SXM** | Public lead SKU |
-| Hot Aisle **MI300X** | Available, stock can be tight |
-| Cancel + teardown | Live |
-| Dashboard | Observe keys, credits, runs — **not** the launcher |
+| Pack | The CLI selects the source files your entry point needs and shows them on `--dry-run`. |
+| Create | Compute stores the payload, checks your balance, and queues one run. |
+| Provision | A fresh 1× machine is created at the **rate locked when you requested it**. |
+| Execute | Your function runs. JSON in, JSON out. |
+| Finish | You get a result and a receipt. Compute confirms the provider machine is terminated. |
 
-Admission is capped (concurrency and spend). Treat this as early access, not an SLO.
+Default timeout is **10 minutes** (max 24 hours). A machine that never becomes ready costs **$0**.
+
+## GPUs you can ask for today
+
+| SKU | Provider | Notes |
+|---|---|---|
+| `H100-SXM` | RunPod Secure | Public launch SKU. `--gpu H100` maps here. |
+| `MI300X` | Hot Aisle | Early access. Stock can be unavailable after rapid recycle. |
+
+Rates change. Trust `compute gpu list` and [pricing](https://compute.cx/pricing), not a number copied from a blog post.
 
 ## What this manual does not cover
 
-These exist in design or in the binary and are **not** documented as customer-ready here:
+These exist in the product or the roadmap, but they are **not** part of the public v0.1 story:
 
-- `pip install compute` (v0.2)
-- Detached SDK handles that you wait on later
-- Persistent disks
-- Checkpoint resume
-- Community / interruptible / extra consumer SKUs
-- Multi-GPU shapes
+- Installing from PyPI (`pip install compute`) — use `curl \| sh` for now.
+- Detached SDK handles, persistent disks, custom images, or multi-GPU shapes.
+- Checkpoint resume, named secrets as a first-run requirement, or a public REST playground.
 
-Rates and the platform fee are on [Pricing](https://compute.cx/pricing). Use `compute gpu list` for the locked list rate on a SKU. Do not hard-code a fee percentage from this page.
-
-## Next
-
-<CardGroup cols={2}>
-  <Card title="Install" href="/get-started/install" icon="download">
-    Isolated venv, `compute` on PATH.
-  </Card>
-  <Card title="First run" href="/get-started/first-run" icon="play">
-    Tiny MLP on H100-SXM.
-  </Card>
-</CardGroup>
+If a command is in `--help` but not here, treat it as unsupported until this site says otherwise.

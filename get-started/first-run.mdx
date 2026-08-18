@@ -1,47 +1,21 @@
 ---
 title: First run
-description: Dry-run a tiny MLP, then execute it on RunPod Secure H100-SXM.
+description: Pack a function, confirm the file set, then wait on one H100-SXM.
 ---
 
-Public self-service leads with **H100-SXM**. `--gpu H100` maps to that SKU.
+You need the CLI installed, `compute setup` done, and at least **$10** of prepaid credit. Add credit with `compute credits add 10` or on [Credits](https://compute.cx/credits).
 
-## 1. Add credit
+## 1. Write a small function
 
-```bash
-compute credits add 10
-```
-
-Minimum top-up is **$10**. Complete Checkout in the browser, then:
-
-```bash
-compute credits
-```
-
-The balance updates after the payment webhook, not at the moment the Checkout tab opens. See [Credits](/cli/credits).
-
-## 2. Write a function
-
-Save as `simple_mlp.py`:
+Save this as `train.py`. JSON in, JSON out. The function must be importable as `train.py::main`.
 
 ```python
-import compute
-
-app = compute.App("simple-mlp")
-image = compute.Image.cuda_pytorch()
-
-
-@app.function(gpu="H100-80GB", image=image, timeout=600)
-def train(steps: int = 40, hidden: int = 32, seed: int = 0) -> dict:
+def main(steps: int = 40) -> dict:
     import torch
     import torch.nn as nn
 
-    torch.manual_seed(seed)
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    model = nn.Sequential(
-        nn.Linear(16, hidden),
-        nn.ReLU(),
-        nn.Linear(hidden, 2),
-    ).to(device)
+    model = nn.Sequential(nn.Linear(16, 32), nn.ReLU(), nn.Linear(32, 2)).to(device)
     opt = torch.optim.Adam(model.parameters(), lr=1e-3)
     loss_fn = nn.CrossEntropyLoss()
     x = torch.randn(256, 16, device=device)
@@ -54,44 +28,40 @@ def train(steps: int = 40, hidden: int = 32, seed: int = 0) -> dict:
         opt.step()
     return {
         "ok": True,
-        "compat": "mlp",
         "device": str(device),
-        "cuda": bool(torch.cuda.is_available()),
         "steps": steps,
         "loss": float(last.detach()),
-        "torch": torch.__version__,
     }
 ```
 
-`gpu="H100-80GB"` is the same SKU as `H100-SXM`. Arguments and the return value must be JSON.
+Compute packs the files your entry point actually imports. You do not upload a whole repo unless those files are reachable from the function.
 
-## 3. See what would ship
-
-```bash
-compute run simple_mlp.py::train --gpu H100-SXM --dry-run
-```
-
-The dry run prints the file set and manifest. Nothing is uploaded. No machine is created.
-
-## 4. Run it
+## 2. See what will upload
 
 ```bash
-compute run simple_mlp.py::train --gpu H100-SXM --wait --yes --args '{"steps": 40, "seed": 20260814}'
+compute run train.py::main --gpu H100-SXM --dry-run
 ```
 
-- `--wait` streams status (and logs when present) until a terminal state.
-- Without `--wait`, the CLI exits after create; use `compute logs <run_id> -f` later.
-- `--yes` skips the interactive price confirmation.
+`--dry-run` prints the exact file set. It does not upload, create a run, or spend credit.
 
-When it succeeds you get JSON back. Then:
+## 3. Run and wait
+
+```bash
+compute run train.py::main --gpu H100-SXM --wait
+```
+
+`--gpu H100` means the same machine as `H100-SXM` (RunPod Secure). `--wait` streams logs until the run is terminal, then prints the result.
+
+Without `--wait` the CLI exits after create. Follow later with `compute logs <run_id> --follow`.
+
+Add `--yes` to skip the confirmation prompt (CI).
+
+## 4. Read the receipt
 
 ```bash
 compute runs receipt <run_id>
-compute machines
 ```
 
-`compute machines` should be empty after teardown. That is the product: one run, one machine, then gone.
+A machine that never becomes ready is **$0**. Started minutes on a ready machine are billed at the rate locked when you requested the run, plus the platform fee on [pricing](https://compute.cx/pricing).
 
-## If create is refused
-
-Admission and spend caps can block new runs even with a positive balance. `compute doctor --json` and the error body include a request id — send that to [Support](/support).
+Next: [compute run](/cli/run) or the [Python SDK](/sdk).

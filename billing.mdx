@@ -1,17 +1,20 @@
 ---
 title: Billing
-description: Prepaid credit. Started minutes plus platform fee. Failed boot is $0.
+description: Prepaid credit, started minutes, $0 failed boot. Fee % lives on the pricing page.
 ---
 
-Compute is **prepaid**. You add credit, then runs hold and burn that balance.
+WOW21, Inc. sells prepaid Compute credit through Stripe. Minimum top-up is **$10**. There is no monthly invoice and no automatic card charge when a cycle ends.
 
-## Rules that are live
+## What you are billed for
 
-- Minimum Checkout: **$10** (`compute credits add 10`).
-- You are billed **started minutes** while the provider machine exists, rounded up.
-- A **failed boot** that never starts the machine is **$0**.
-- When the run ends (success, error, cancel, timeout), Compute terminates the machine and writes a receipt.
-- One receipt line is provider usage. Another is the **platform fee**.
+| Situation | Charge |
+|---|---|
+| Machine never becomes ready | **$0** |
+| Machine is ready | Provider list rate **locked at request time**, counted in started minutes, plus the platform fee |
+
+The platform fee is marginal and depends on month-to-date provider usage. **Read the current tiers on [pricing](https://compute.cx/pricing).** This manual does not reprint a percentage so an old docs page cannot disagree with the biller.
+
+## Where to look
 
 ```bash
 compute credits
@@ -19,16 +22,6 @@ compute usage
 compute runs receipt <run_id>
 ```
 
-## Rates and fee
+Dashboard: [Credits](https://compute.cx/credits) and [Usage](https://compute.cx/usage).
 
-List rates (¢/hr) come from `compute gpu list`.
-
-The platform fee percentage is published on [Pricing](https://compute.cx/pricing). This manual does **not** restate a number so it cannot drift from the site or the biller.
-
-## Caps
-
-Spend and concurrency caps can refuse a create even when `compute credits` is positive. The API error includes a request id — keep it for [Support](/support).
-
-## Dashboard
-
-[Credits](https://compute.cx/credits) and [usage](https://compute.cx/usage) mirror the CLI. Checkout still completes in the browser.
+No automatic refunds. Exceptional credits are manual. Include a **run id** or **request id** when you write.

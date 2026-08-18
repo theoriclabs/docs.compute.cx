@@ -2,18 +2,17 @@
   "$schema": "https://mintlify.com/docs.json",
   "theme": "mint",
   "name": "Compute",
-  "description": "Run a Python function on a fresh cloud GPU. Prepaid, billed by the started minute, terminated when the run ends.",
+  "description": "Run a Python function on a fresh cloud GPU. Prepaid, billed by the started minute.",
   "colors": {
-    "primary": "#6467F2",
-    "light": "#818DF8",
-    "dark": "#4F46E5"
-  },
-  "logo": {
-    "light": "/logo-mark.png",
-    "dark": "/logo-mark.png",
-    "href": "https://compute.cx"
+    "primary": "#111512",
+    "light": "#111512",
+    "dark": "#DFE1E2"
   },
   "favicon": "/logo-mark.png",
+  "logo": {
+    "light": "/logo-mark.png",
+    "dark": "/logo-mark.png"
+  },
   "navbar": {
     "links": [
       {
@@ -23,28 +22,15 @@
       {
         "label": "Pricing",
         "href": "https://compute.cx/pricing"
-      }
-    ],
-    "primary": {
-      "type": "button",
-      "label": "Dashboard",
-      "href": "https://compute.cx/runs"
-    }
-  },
-  "footer": {
-    "links": [
+      },
       {
-        "header": "Product",
-        "items": [
-          { "label": "Compute", "href": "https://compute.cx" },
-          { "label": "Quickstart", "href": "https://compute.cx/quickstart" },
-          { "label": "Pricing", "href": "https://compute.cx/pricing" }
-        ]
+        "label": "Dashboard",
+        "href": "https://compute.cx/runs"
       }
     ]
   },
   "banner": {
-    "content": "Admission is capped. This is the CLI manual — not a promise that anyone can buy and train. [Quickstart](https://compute.cx/quickstart) · [Pricing](https://compute.cx/pricing)",
+    "content": "Early access. Admission and spend are capped. The [quickstart](https://compute.cx/quickstart) is the three-command funnel; this site is the manual.",
     "dismissible": false
   },
   "navigation": {
@@ -76,6 +62,11 @@
         "pages": ["sdk", "billing", "limits", "support"]
       }
     ]
+  },
+  "footer": {
+    "socials": {
+      "website": "https://compute.cx"
+    }
   },
   "seo": {
     "metatags": {
