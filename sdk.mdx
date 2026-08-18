@@ -1,0 +1,45 @@
+---
+title: SDK (Python)
+description: App, Image, @app.function, and .remote(). The CLI is how you launch.
+---
+
+The Python package you write against is the same one the CLI uploads.
+
+```python
+import compute
+
+app = compute.App("my-job")
+image = compute.Image.cuda_pytorch()
+
+
+@app.function(gpu="H100-80GB", image=image, timeout=600)
+def train(steps: int = 40) -> dict:
+    # imports that need the GPU image go inside the function
+    return {"ok": True, "steps": steps}
+```
+
+Then:
+
+```bash
+compute run train.py::train --gpu H100-SXM --wait
+```
+
+## Surface that is documented
+
+| Symbol | Role |
+|---|---|
+| `compute.App(name)` | Names the app in the upload. |
+| `compute.Image.cuda_pytorch()` | NVIDIA / H100 image. |
+| `compute.Image.rocm_pytorch()` | AMD / MI300X image. |
+| `@app.function(...)` | Marks the entrypoint. `gpu`, `image`, `timeout`. |
+| `fn.remote(**kwargs)` | In-script call shape. Args and return must be JSON. |
+
+Put GPU-only imports **inside** the function so local dry-runs and packaging stay honest.
+
+## Not in this manual
+
+Do not treat local process spawning, detached handles you wait on later, persistent disks, or extra decorators as supported customer API. If it is not in the table above, do not build a workflow on it.
+
+## Timeout
+
+Decorator `timeout=` is seconds on the function. The v0.1 public default / cap is **10 minutes**. See [Limits](/limits).

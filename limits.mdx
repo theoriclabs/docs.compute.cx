@@ -1,0 +1,36 @@
+---
+title: Limits
+description: Fresh machine per run. 10-minute default. You do not log into the box.
+---
+
+These are the v0.1 customer limits. They can tighten without a docs deploy — treat API errors as authoritative.
+
+## Runtime
+
+| Limit | v0.1 |
+|---|---|
+| Function timeout | **10 minutes** default / cap |
+| Machine lifetime | One run. New VM each create. |
+| Concurrency | Capped (often one active machine / run per user) |
+| Create rate | Capped (hourly) |
+
+`timeout=` on `@app.function` is seconds. Do not plan hour-long jobs on the public path.
+
+## What you get
+
+- One GPU SKU from `compute gpu list`.
+- One process: your function.
+- Logs and a JSON return value.
+- A receipt after terminate.
+
+## What you do not get
+
+- A login shell on the machine.
+- A machine that stays up between runs.
+- A region or instance-template picker.
+- Persistent disks.
+- A dashboard “Run” button — launch from the CLI.
+
+## Admission
+
+Public admission can still refuse new creates. That is a cap, not an outage. If you are blocked, send the request id from the error to [Support](/support).

@@ -1,0 +1,40 @@
+---
+title: Sign in
+description: Browser sign-in writes a local credential. CI uses a revocable API key.
+---
+
+## Interactive (`compute setup`)
+
+```bash
+compute setup
+```
+
+The CLI starts a device login, opens (or prints) a URL on [compute.cx](https://compute.cx), and waits for Approve.
+
+On success it writes `~/.compute/config.toml` with mode `0600`. The token is never rendered in the approval page HTML.
+
+```bash
+compute doctor --json
+```
+
+Use this to confirm you are signed in without dumping secrets.
+
+## CI (`COMPUTE_API_KEY`)
+
+1. Sign in on the [dashboard](https://compute.cx/runs).
+2. Create a key under [API keys](https://compute.cx/keys). The secret is shown once.
+3. Export it in the environment:
+
+```bash
+export COMPUTE_API_KEY='ck_live_…'
+```
+
+The env var wins over `config.toml`. Revoke the key from the dashboard when the job is done.
+
+## Dashboard
+
+The website is for keys, credits, usage, and watching runs. **Create runs from the CLI**, not from the dashboard.
+
+## Next
+
+Add prepaid credit, then [run a function](/get-started/first-run).

@@ -1,0 +1,41 @@
+---
+title: GPU list
+description: Locked public SKUs and list rates. H100-SXM is the lead.
+---
+
+```bash
+compute gpu list
+compute gpu list --json
+```
+
+That output is the source of truth for names and **list ¢/hr**. Marketing pages can lag.
+
+## v0.1 SKUs
+
+| Name | Also accepted | Provider | Role |
+|---|---|---|---|
+| `H100-SXM` | `H100`, `H100-80GB` | RunPod Secure | Public lead |
+| `MI300X` | — | Hot Aisle | AMD; stock can be tight |
+
+Do not assume A100, consumer cards, community pools, or interruptible SKUs from this manual. If `gpu list` does not show it, do not pass it.
+
+## Decorator vs CLI
+
+```python
+@app.function(gpu="H100-80GB", image=compute.Image.cuda_pytorch(), timeout=600)
+```
+
+```bash
+compute run train.py::main --gpu H100-SXM
+```
+
+The CLI `--gpu` flag wins when both are set.
+
+## Images
+
+- NVIDIA: `compute.Image.cuda_pytorch()`
+- AMD: `compute.Image.rocm_pytorch()`
+
+Use the image that matches the SKU. Mixing CUDA images onto MI300X (or the reverse) is a failed run, not a silent fallback.
+
+Rates: [Pricing](https://compute.cx/pricing). Caps: [Limits](/limits).

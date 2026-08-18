@@ -1,0 +1,35 @@
+---
+title: Install
+description: Install the Compute CLI with curl. PyPI is not the v0.1 route.
+---
+
+v0.1 install is a single script. It creates an isolated environment and puts `compute` on your PATH.
+
+```bash
+curl -fsSL https://compute.cx/install.sh | sh
+```
+
+Supported: **macOS and Linux**, **Python 3.10–3.14**.
+
+Then check the binary:
+
+```bash
+compute --version
+compute doctor --json
+```
+
+`doctor` prints client version, API reachability, and sanitized auth state. It never prints your token, source, or local paths.
+
+## What the installer is not
+
+- Not `pip install compute`. That route is later.
+- Not a source checkout of this docs repo or the product monorepo.
+- Not a Windows installer.
+
+## Upgrade
+
+Re-run the same `curl|sh` command. It installs the current published wheel from `https://compute.cx`.
+
+## Next
+
+[Sign in](/get-started/sign-in) with `compute setup`.

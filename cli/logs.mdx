@@ -1,0 +1,23 @@
+---
+title: Logs
+description: Follow a run from another terminal. Default run detaches.
+---
+
+```bash
+compute logs <run_id>
+compute logs <run_id> -f
+```
+
+`-f` follows until the run is terminal.
+
+Without `--wait` on `compute run`, the CLI exits after create. Open another terminal and follow logs there.
+
+```bash
+compute run train.py::main --gpu H100-SXM --yes
+# note the run_id
+compute logs <run_id> -f
+```
+
+`--wait` on `run` already streams status (and logs when present). Use `logs -f` when you detached.
+
+`compute runs status <run_id>` is the state machine. `logs` is the stream.

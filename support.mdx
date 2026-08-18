@@ -1,0 +1,35 @@
+---
+title: Support
+description: Send a run id and a request id. Do not paste tokens.
+---
+
+## What to include
+
+1. **Run id** — from `compute run` or `compute runs list`.
+2. **Request id** — from the API error body or `compute doctor --json`.
+3. What you ran (`file.py::fn`, `--gpu`, whether you used `--wait`).
+4. Approximate UTC time.
+
+Do not paste `COMPUTE_API_KEY`, `config.toml`, or Checkout session ids.
+
+## Where to send it
+
+There is no public issue tracker and no `status.compute.cx` page yet. The dashboard is not a ticketing UI.
+
+Privacy, export, and deletion: **[privacy@theoric.com](mailto:privacy@theoric.com)** (same address as [Privacy](https://compute.cx/privacy)). Include your Compute user id (`usr_…`) when you have one.
+
+For a failed or stuck run, keep the run id and request id until there is a published operator contact. [Terms](https://compute.cx/terms) still tell you to include those ids.
+
+## Self-check before you write
+
+```bash
+compute doctor --json
+compute runs status <run_id>
+compute machines
+```
+
+If the run is terminal and `machines` is empty, teardown did its job even if the function failed. Send the run id anyway if the receipt looks wrong.
+
+## Legal
+
+[Terms](https://compute.cx/terms) and [Privacy](https://compute.cx/privacy) are on the product site. Treat them as drafts until the site says otherwise.
