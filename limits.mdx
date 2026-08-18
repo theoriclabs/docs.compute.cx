@@ -11,8 +11,8 @@ These are the v0.1 customer limits. They can tighten without a docs deploy — t
 |---|---|
 | Function timeout | **10 minutes** default / cap |
 | Machine lifetime | One run. New VM each create. |
-| Concurrency | Capped (often one active machine / run per user) |
-| Create rate | Capped (hourly) |
+| Concurrency | One active run per account |
+| Create rate | Per-account hourly cap |
 
 `timeout=` on `@app.function` is seconds. Do not plan hour-long jobs on the public path.
 
@@ -33,4 +33,6 @@ These are the v0.1 customer limits. They can tighten without a docs deploy — t
 
 ## Admission
 
-Public admission can still refuse new creates. That is a cap, not an outage. If you are blocked, send the request id from the error to [Support](/support).
+New creates can be refused when the account already has an active run, lacks enough prepaid credit, reaches a spend or create-rate limit, or no provider has capacity. Compute does not have a service-wide one-machine limit: different accounts are not serialized by a single Compute-wide machine slot. Provider capacity is not guaranteed.
+
+If a run is refused, send the request id from the error to [Support](/support).

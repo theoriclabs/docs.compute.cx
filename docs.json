@@ -44,7 +44,7 @@
     ]
   },
   "banner": {
-    "content": "Admission is capped. This is the CLI manual — not a promise that anyone can buy and train. [Quickstart](https://compute.cx/quickstart) · [Pricing](https://compute.cx/pricing)",
+    "content": "Early access: runs remain subject to per-account limits and provider availability; capacity is not guaranteed. [Quickstart](https://compute.cx/quickstart) · [Pricing](https://compute.cx/pricing)",
     "dismissible": false
   },
   "navigation": {
