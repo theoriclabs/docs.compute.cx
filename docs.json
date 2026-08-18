@@ -43,10 +43,6 @@
       }
     ]
   },
-  "banner": {
-    "content": "Early access: runs remain subject to per-account limits and provider availability; capacity is not guaranteed. [Quickstart](https://compute.cx/quickstart) · [Pricing](https://compute.cx/pricing)",
-    "dismissible": false
-  },
   "navigation": {
     "groups": [
       {
