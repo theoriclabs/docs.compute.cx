@@ -1,0 +1,147 @@
+---
+title: Reinforcement learning
+description: LoRA GRPO on a fresh MI300X. The homepage command is rl.py::train.
+---
+
+Use this when you can score an answer more easily than you can write the ideal one. The run loads a small instruct model, samples groups of completions, and steps a LoRA adapter with TRL's `accuracy_reward` on DeepMath. You get JSON metrics back. The machine is gone when the function returns.
+
+Public self-service for this guide is **MI300X**. Stock can be tight.
+
+Need install and credit first? [Install](/get-started/install), [sign in](/get-started/sign-in), then [add credit](/cli/credits).
+
+## Save the file
+
+Save as `rl.py`:
+
+```python
+import compute
+
+app = compute.App("rl-grpo")
+image = compute.Image.rocm_pytorch().pip_install(
+    "transformers",
+    "peft",
+    "datasets",
+    "trl",
+    "accelerate",
+    "math_verify",
+)
+
+DEFAULT_MODEL = "Qwen/Qwen2.5-0.5B-Instruct"
+DEFAULT_DATASET = "trl-lib/DeepMath-103K"
+
+
+@app.function(gpu="MI300X", image=image, timeout=1800)
+def train(
+    model_id: str = DEFAULT_MODEL,
+    dataset_id: str = DEFAULT_DATASET,
+    max_steps: int = 1,
+    sample_count: int = 16,
+    lr: float = 1e-5,
+    rank: int = 8,
+    num_generations: int = 4,
+    max_completion_length: int = 256,
+    max_prompt_length: int = 512,
+) -> dict:
+    import time
+
+    import torch
+    from datasets import load_dataset
+    from peft import LoraConfig, TaskType
+    from trl import GRPOConfig, GRPOTrainer
+    from trl.rewards import accuracy_reward
+
+    if not torch.cuda.is_available():
+        raise RuntimeError("this entrypoint needs a GPU")
+    if num_generations < 2:
+        raise ValueError("num_generations must be >= 2")
+    if sample_count < num_generations:
+        raise ValueError("sample_count must be >= num_generations")
+
+    dataset = load_dataset(dataset_id, split=f"train[:{sample_count}]")
+    trainer = GRPOTrainer(
+        model=model_id,
+        reward_funcs=accuracy_reward,
+        train_dataset=dataset,
+        args=GRPOConfig(
+            output_dir="/tmp/lora-grpo",
+            max_steps=max_steps,
+            per_device_train_batch_size=num_generations,
+            gradient_accumulation_steps=1,
+            learning_rate=lr,
+            logging_steps=1,
+            bf16=True,
+            optim="adamw_torch",
+            report_to="none",
+            save_strategy="no",
+            gradient_checkpointing=True,
+            num_generations=num_generations,
+            max_completion_length=max_completion_length,
+            max_prompt_length=max_prompt_length,
+            remove_unused_columns=False,
+            model_init_kwargs={"torch_dtype": "bfloat16"},
+        ),
+        peft_config=LoraConfig(
+            task_type=TaskType.CAUSAL_LM,
+            r=rank,
+            lora_alpha=rank * 2,
+            lora_dropout=0.05,
+            bias="none",
+            target_modules=["q_proj", "k_proj", "v_proj", "o_proj"],
+        ),
+    )
+
+    t0 = time.perf_counter()
+    metrics = trainer.train().metrics
+    reward_keys = sorted(
+        key for key in metrics if key.startswith("rewards/") and key.endswith("/mean")
+    )
+    return {
+        "ok": True,
+        "method": "grpo",
+        "model_id": model_id,
+        "dataset_id": dataset_id,
+        "max_steps": max_steps,
+        "sample_count": sample_count,
+        "num_generations": num_generations,
+        "device": torch.cuda.get_device_name(0),
+        "train_loss": float(metrics.get("train_loss", 0.0)),
+        "reward_mean": float(metrics[reward_keys[0]]) if reward_keys else None,
+        "wall_s": round(time.perf_counter() - t0, 3),
+    }
+```
+
+The decorator sets a 30-minute kill limit. One GRPO step still samples several completions, so stay on `--wait` for the first run.
+
+## Dry-run, then run
+
+```bash
+compute run rl.py::train --gpu MI300X --dry-run
+compute run rl.py::train --gpu MI300X --wait --yes
+```
+
+The homepage command is the same entrypoint without `--wait --yes`. Without `--wait`, the CLI prints a run id and exits; `compute logs <run_id> -f` follows it from another terminal.
+
+Defaults are one step, 16 prompts, 4 generations each. To do more work:
+
+```bash
+compute run rl.py::train --gpu MI300X --wait --yes \
+  --args '{"max_steps":5,"sample_count":64}' \
+  --timeout 3600
+```
+
+`--timeout` may go up to **24 hours**. You are billed for started minutes while the machine exists. Closing the laptop after a detached create does not keep the job warm past the timeout or after the function returns.
+
+## What you get back
+
+JSON with `reward_mean`, `train_loss`, and the device name. There is no checkpoint-resume API and no artifact download in v0.1.
+
+If create is refused, send the request id to [Support](/support).
+
+<CardGroup cols={2}>
+  <Card title="Fine-tune a model" href="/guides/fine-tune">
+    Supervised LoRA when you have labeled examples.
+  </Card>
+  <Card title="Batch inference" href="/guides/batch">
+    Score or label a set without training.
+  </Card>
+</CardGroup>

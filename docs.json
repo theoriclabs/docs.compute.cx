@@ -59,6 +59,14 @@
         ]
       },
       {
+        "group": "Guides",
+        "pages": [
+          "guides/fine-tune",
+          "guides/rl",
+          "guides/batch"
+        ]
+      },
+      {
         "group": "CLI",
         "pages": [
           "cli/run",

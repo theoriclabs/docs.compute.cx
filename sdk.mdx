@@ -31,6 +31,7 @@ compute run simple_mlp.py::train --gpu H100-SXM --wait --yes
 | `compute.App(name)` | Names the app in the upload. |
 | `compute.Image.cuda_pytorch()` | NVIDIA / H100 image. |
 | `compute.Image.rocm_pytorch()` | AMD / MI300X image. |
+| `Image.<curated>().pip_install(...)` | Extra pip packages on that image. |
 | `@app.function(...)` | Marks the entrypoint. `gpu`, `image`, `timeout`. |
 | `fn.remote(**kwargs)` | In-script call shape. Args and return must be JSON. |
 
@@ -42,4 +43,4 @@ Do not treat local process spawning, detached handles you wait on later, persist
 
 ## Timeout
 
-Decorator `timeout=` is seconds on the function. The v0.1 public default / cap is **10 minutes**. See [Limits](/limits).
+Decorator `timeout=` is seconds on the function. The CLI default is **10 minutes** if neither the decorator nor `--timeout` is set. The maximum is **24 hours**. See [Limits](/limits).

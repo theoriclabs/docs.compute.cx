@@ -1,6 +1,6 @@
 ---
 title: Limits
-description: Fresh machine per run. 10-minute default. You do not log into the box.
+description: Fresh machine per run. 10-minute default, 24-hour maximum. You do not log into the box.
 ---
 
 These are the v0.1 customer limits. They can tighten without a docs deploy — treat API errors as authoritative.
@@ -9,12 +9,12 @@ These are the v0.1 customer limits. They can tighten without a docs deploy — t
 
 | Limit | v0.1 |
 |---|---|
-| Function timeout | **10 minutes** default / cap |
+| Function timeout | **10 minutes** default, **24 hours** maximum |
 | Machine lifetime | One run. New VM each create. |
 | Concurrency | One active run per account |
 | Create rate | Per-account hourly cap |
 
-`timeout=` on `@app.function` is seconds. Do not plan hour-long jobs on the public path.
+`timeout=` on `@app.function` is seconds. The CLI default is **600** unless the decorator or `--timeout` sets another value. The [workload guides](/guides/fine-tune) use a 30-minute decorator so image pull and a short train still finish.
 
 ## What you get
 
