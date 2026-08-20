@@ -11,8 +11,6 @@ Agents should fetch this file:
 
 [https://compute.cx/SKILL.md](https://compute.cx/SKILL.md)
 
-Same file is hosted with this manual at [https://docs.compute.cx/SKILL.md](https://docs.compute.cx/SKILL.md).
-
 ```bash
 curl -fsSL https://compute.cx/SKILL.md
 ```
@@ -32,7 +30,7 @@ That is enough for Cursor, Claude Code, Codex, and similar tools that can fetch 
 ## What the skill does
 
 1. Installs with `curl -fsSL https://compute.cx/install.sh | sh` and `compute setup`.
-2. Writes the tested [`simple_mlp.py`](/examples/simple_mlp.py) example from [First run](/get-started/first-run).
+2. Writes the tested `simple_mlp.py` example from [First run](/get-started/first-run).
 3. Runs `compute run simple_mlp.py::train --gpu H100-SXM --dry-run` (no machine).
 4. On your confirmation, submits with `--wait --yes` and checks teardown via `compute machines`.
 

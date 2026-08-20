@@ -53,7 +53,7 @@ A run is refused if the hold would exceed remaining credit or a spend cap. Billi
 
 ## First example
 
-Save this file as `simple_mlp.py` in the working directory (also at `https://docs.compute.cx/examples/simple_mlp.py` and in [First run](https://docs.compute.cx/get-started/first-run)):
+Save this file as `simple_mlp.py` in the working directory (source also in [First run](https://docs.compute.cx/get-started/first-run)):
 
 ```python
 import compute
