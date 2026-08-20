@@ -13,10 +13,12 @@ compute logs <run_id> -f
 Without `--wait` on `compute run`, the CLI exits after create. Open another terminal and follow logs there.
 
 ```bash
-compute run train.py::main --gpu H100-SXM --yes
+compute run simple_mlp.py::train --gpu H100-SXM --yes
 # note the run_id
 compute logs <run_id> -f
 ```
+
+`simple_mlp.py` is in [First run](/get-started/first-run).
 
 `--wait` on `run` already streams status (and logs when present). Use `logs -f` when you detached.
 

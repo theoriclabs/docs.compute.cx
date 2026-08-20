@@ -13,12 +13,18 @@ You do not manage images, keep-alive pools, or a login to the box. The machine e
 curl -fsSL https://compute.cx/install.sh | sh
 compute setup
 compute credits add 10
-compute run train.py::main --gpu H100-SXM --wait
+compute run simple_mlp.py::train --gpu H100-SXM --wait --yes
 ```
+
+Save [`simple_mlp.py`](/examples/simple_mlp.py) first, or copy it from [First run](/get-started/first-run). `--yes` skips the interactive spend confirmation; the run still burns prepaid credit. Use `--dry-run` in place of `--wait --yes` to print the upload plan without creating a machine.
 
 `--gpu H100` is an alias for **H100-SXM**.
 
 The three-command funnel (install → setup → run) also lives on [compute.cx/quickstart](https://compute.cx/quickstart). This site is the manual.
+
+<Card title="Use with an agent" href="/get-started/agent-skill" icon="robot" horizontal>
+  Point Cursor, Claude Code, or Codex at [https://compute.cx/SKILL.md](https://compute.cx/SKILL.md). `--dry-run` creates no machine; a real run spends prepaid credit.
+</Card>
 
 ## What is live
 
@@ -49,11 +55,14 @@ Rates and the platform fee are on [Pricing](https://compute.cx/pricing). Use `co
 
 ## Next
 
-<CardGroup cols={2}>
+<CardGroup cols={3}>
   <Card title="Install" href="/get-started/install" icon="download">
     Isolated venv, `compute` on PATH.
   </Card>
   <Card title="First run" href="/get-started/first-run" icon="play">
     Tiny MLP on H100-SXM.
+  </Card>
+  <Card title="Agent Skill" href="/get-started/agent-skill" icon="robot">
+    Spend-aware workflow for coding agents.
   </Card>
 </CardGroup>

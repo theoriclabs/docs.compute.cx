@@ -18,10 +18,10 @@ def train(steps: int = 40) -> dict:
     return {"ok": True, "steps": steps}
 ```
 
-Then:
+Then launch the tested example ([source](/get-started/first-run)):
 
 ```bash
-compute run train.py::train --gpu H100-SXM --wait
+compute run simple_mlp.py::train --gpu H100-SXM --wait --yes
 ```
 
 ## Surface that is documented

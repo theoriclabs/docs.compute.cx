@@ -7,13 +7,13 @@ description: Upload a Python file, enqueue a function, optionally wait for JSON.
 compute run <file.py>::<function> --gpu <sku> [options]
 ```
 
-Example:
+Example ([source](/get-started/first-run)):
 
 ```bash
 compute run simple_mlp.py::train --gpu H100-SXM --wait --yes
 ```
 
-`--gpu H100` is an alias for `H100-SXM`. `--gpu MI300X` is the AMD SKU (stock can be tight).
+`--gpu H100` is an alias for `H100-SXM`. `--gpu MI300X` is the AMD SKU (stock can be tight). `--yes` skips the interactive spend confirmation.
 
 ## Flags
 
@@ -45,7 +45,7 @@ You pick a GPU name. Compute picks the provider unless you pass `--provider`. Yo
 
 ```bash
 # prints run_id and exits
-compute run train.py::main --gpu H100-SXM --yes
+compute run simple_mlp.py::train --gpu H100-SXM --yes
 
 # later
 compute runs status <run_id>
@@ -53,6 +53,8 @@ compute logs <run_id> -f
 compute runs result <run_id>
 compute runs receipt <run_id>
 ```
+
+`simple_mlp.py` is in [First run](/get-started/first-run).
 
 Or do it in one shot with `--wait`.
 

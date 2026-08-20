@@ -26,10 +26,10 @@ Do not assume A100, consumer cards, community pools, or interruptible SKUs from 
 ```
 
 ```bash
-compute run train.py::main --gpu H100-SXM
+compute run simple_mlp.py::train --gpu H100-SXM
 ```
 
-The CLI `--gpu` flag wins when both are set.
+The CLI `--gpu` flag wins when both are set. `simple_mlp.py` is in [First run](/get-started/first-run).
 
 ## Images
 
