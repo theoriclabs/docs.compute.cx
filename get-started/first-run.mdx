@@ -1,9 +1,9 @@
 ---
 title: First run
-description: Dry-run a tiny MLP, then execute it on RunPod Secure H100-SXM.
+description: Dry-run a tiny MLP, then execute it on reserved H100-SXM or a cheaper Vast.ai card.
 ---
 
-Public self-service leads with **H100-SXM**. `--gpu H100` maps to that SKU.
+Public self-service leads with reserved **H100-SXM**. `--gpu H100` maps to that SKU. Cheaper interruptible cards: `--provider vastai --gpu RTX-4090` (same file, CUDA image). Live names: [GPU list](/cli/gpus).
 
 ## 1. Add credit
 
@@ -82,6 +82,14 @@ compute run simple_mlp.py::train --gpu H100-SXM --wait --yes --args '{"steps": 4
 - `--wait` streams status (and logs when present) until a terminal state.
 - Without `--wait`, the CLI exits after create; use `compute logs <run_id> -f` later.
 - `--yes` skips the interactive price confirmation.
+
+The same file on a cheaper interruptible card:
+
+```bash
+compute run simple_mlp.py::train --provider vastai --gpu RTX-4090 --wait --yes
+```
+
+The host can reclaim interruptible capacity. Compute then ends the run and confirms teardown.
 
 When it succeeds you get JSON back. Then:
 

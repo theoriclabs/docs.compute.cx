@@ -1,6 +1,6 @@
 ---
 title: GPU list
-description: Locked public SKUs and list rates. H100-SXM is the lead.
+description: Locked public SKUs and list rates. Reserved H100, AMD MI300X, and Vast.ai interruptible cards.
 ---
 
 ```bash
@@ -14,10 +14,20 @@ That output is the source of truth for names and **list ¢/hr**. Marketing pages
 
 | Name | Also accepted | Provider | Role |
 |---|---|---|---|
-| `H100-SXM` | `H100`, `H100-80GB` | RunPod Secure | Public lead |
+| `H100-SXM` | `H100`, `H100-80GB` | RunPod Secure | Reserved public lead |
 | `MI300X` | — | Hot Aisle | AMD; stock can be tight |
+| `RTX-3090` | `3090`, `RTX3090` | Vast.ai interruptible | Lowest locked rate, 24 GB |
+| `RTX-4090` | `4090`, `RTX4090` | Vast.ai interruptible | Common 24 GB training card |
+| `RTX-5090` | `5090`, `RTX5090` | Vast.ai interruptible | 32 GB consumer |
+| `RTX-6000-ADA` | — | Vast.ai interruptible | 48 GB workstation |
+| `L4` | — | Vast.ai interruptible | 24 GB inference |
+| `A100-40GB` | `A100-40` | Vast.ai interruptible | 40 GB datacenter |
+| `A100-80GB` | `A100-80` | Vast.ai interruptible | 80 GB datacenter |
+| `H100-SXM` | — | Vast.ai interruptible | Same name as RunPod; qualify it |
 
-Do not assume A100, consumer cards, community pools, or interruptible SKUs from this manual. If `gpu list` does not show it, do not pass it.
+`H100-SXM` exists on both RunPod and Vast.ai. A bare `--gpu H100-SXM` is ambiguous — use `--provider runpod` or `--provider vastai`, or write `vastai/H100-SXM`.
+
+Vast.ai SKUs are **interruptible**. The host can reclaim the machine. Compute then ends the run and confirms teardown so you are not left paying for a paused box.
 
 ## Decorator vs CLI
 
@@ -27,13 +37,14 @@ Do not assume A100, consumer cards, community pools, or interruptible SKUs from 
 
 ```bash
 compute run simple_mlp.py::train --gpu H100-SXM
+compute run simple_mlp.py::train --provider vastai --gpu RTX-4090
 ```
 
-The CLI `--gpu` flag wins when both are set. `simple_mlp.py` is in [First run](/get-started/first-run).
+The CLI `--gpu` / `--provider` flags win when both decorator and CLI are set. `simple_mlp.py` is in [First run](/get-started/first-run).
 
 ## Images
 
-- NVIDIA: `compute.Image.cuda_pytorch()`
+- NVIDIA (RunPod and Vast.ai): `compute.Image.cuda_pytorch()`
 - AMD: `compute.Image.rocm_pytorch()`
 
 Use the image that matches the SKU. Mixing CUDA images onto MI300X (or the reverse) is a failed run, not a silent fallback.

@@ -21,7 +21,7 @@ compute runs receipt <run_id>
 
 ## Rates and fee
 
-List rates (¢/hr) come from `compute gpu list`.
+List rates (¢/hr) come from `compute gpu list`. Interruptible Vast.ai SKUs use a locked bid; if the host reclaims the machine, the run ends and you are billed only started minutes plus the platform fee.
 
 The platform fee percentage is published on [Pricing](https://compute.cx/pricing). This manual does **not** restate a number so it cannot drift from the site or the biller.
 

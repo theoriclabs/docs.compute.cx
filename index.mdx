@@ -18,7 +18,7 @@ compute run simple_mlp.py::train --gpu H100-SXM --wait --yes
 
 Save `simple_mlp.py` first, or copy it from [First run](/get-started/first-run). `--yes` skips the interactive spend confirmation; the run still burns prepaid credit. Use `--dry-run` in place of `--wait --yes` to print the upload plan without creating a machine.
 
-`--gpu H100` is an alias for **H100-SXM**.
+`--gpu H100` is an alias for reserved **H100-SXM** (RunPod Secure). Cheaper interruptible cards: `--provider vastai --gpu RTX-4090`. Live names: [`compute gpu list`](/cli/gpus).
 
 The three-command funnel (install → setup → run) also lives on [compute.cx/quickstart](https://compute.cx/quickstart). This site is the manual.
 
@@ -33,8 +33,9 @@ The three-command funnel (install → setup → run) also lives on [compute.cx/q
 | Install (`curl\|sh`) | Live |
 | Sign-in + `compute setup` | Live |
 | Prepaid credits | Live — $10 minimum |
-| RunPod Secure **H100-SXM** | Public lead SKU |
+| RunPod Secure **H100-SXM** | Reserved public lead |
 | Hot Aisle **MI300X** | Available, stock can be tight |
+| Vast.ai interruptible | RTX 3090 / 4090 / 5090, L4, A100, H100 — host can reclaim |
 | Cancel + teardown | Live |
 | Dashboard | Observe keys, credits, runs — **not** the launcher |
 
@@ -48,7 +49,7 @@ These exist in design or in the binary and are **not** documented as customer-re
 - Detached SDK handles that you wait on later
 - Persistent disks
 - Checkpoint resume
-- Community / interruptible / extra consumer SKUs
+- Community (RunPod) SKUs beyond the reserved Secure H100
 - Multi-GPU shapes
 
 Rates and the platform fee are on [Pricing](https://compute.cx/pricing). Use `compute gpu list` for the locked list rate on a SKU. Do not hard-code a fee percentage from this page.

@@ -13,14 +13,14 @@ Example ([source](/get-started/first-run)):
 compute run simple_mlp.py::train --gpu H100-SXM --wait --yes
 ```
 
-`--gpu H100` is an alias for `H100-SXM`. `--gpu MI300X` is the AMD SKU (stock can be tight). `--yes` skips the interactive spend confirmation.
+`--gpu H100` is an alias for reserved `H100-SXM`. `--gpu MI300X` is the AMD SKU. `--provider vastai --gpu RTX-4090` is a cheaper interruptible card. `--yes` skips the interactive spend confirmation.
 
 ## Flags
 
 | Flag | Meaning |
 |---|---|
 | `--gpu` | SKU. Required unless the `@app.function` decorator already set one. |
-| `--provider` | Optional pin (`runpod`, `hotaisle`). Usually omit. |
+| `--provider` | Optional pin (`runpod`, `hotaisle`, `vastai`). Required when a SKU name exists on more than one provider. |
 | `--wait` | Stream until terminal; print JSON result. Default is detach after create. |
 | `--timeout` | Function timeout in seconds. Default **600** (10 minutes). |
 | `--args` | JSON object for function kwargs. |

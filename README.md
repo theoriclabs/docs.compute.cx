@@ -20,9 +20,9 @@ Every showcased `file.py::function` must include source on the page or link to a
 
 ## What belongs here
 
-Honest CLI / SDK pages that match live behavior: install via `curl|sh`, `compute setup`, prepaid credits, `run` / logs / cancel, H100-SXM + MI300X, billing rules without inventing a fee percentage. Workload pages under `guides/` must include the `file.py::function` source they tell people to run.
+Honest CLI / SDK pages that match live behavior: install via `curl|sh`, `compute setup`, prepaid credits, `run` / logs / cancel, reserved H100-SXM, MI300X, Vast.ai interruptible SKUs, billing rules without inventing a fee percentage. Workload pages under `guides/` must include the `file.py::function` source they tell people to run.
 
-Do not add internal design docs, OpenAPI playgrounds, or unshipped surfaces (PyPI, persistent disks, extra SKUs).
+Do not add internal design docs, OpenAPI playgrounds, or unshipped surfaces (PyPI, persistent disks, RunPod Community).
 
 ## Connect Mintlify
 

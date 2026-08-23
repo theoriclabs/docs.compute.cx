@@ -18,7 +18,7 @@ Human manual: `https://docs.compute.cx`
 - Do not invent files. The first example below is complete; write it to disk before `compute run`.
 - Do not paste `COMPUTE_API_KEY`, `~/.compute/config.toml`, or Checkout session ids into chat logs.
 - Do not use `pip install compute`. v0.1 install is `curl|sh` only.
-- Live SKUs come from `compute gpu list`. Do not pass a name that list does not show. Public lead is **H100-SXM** (`H100` and `H100-80GB` are aliases). **MI300X** exists; stock can be tight.
+- Live SKUs come from `compute gpu list`. Do not pass a name that list does not show. Public reserved lead is **H100-SXM** (`H100` and `H100-80GB` are aliases). **MI300X** is AMD. Vast.ai interruptible SKUs include **RTX-3090**, **RTX-4090**, **RTX-5090**, **L4**, **A100-40GB**, **A100-80GB**, and **H100-SXM** — pass `--provider vastai` or `vastai/<SKU>`. Interruptible capacity can be reclaimed; Compute then ends the run and tears the machine down.
 - One active run per account. Spend, create-rate, and provider capacity can refuse a create even with a positive balance.
 
 ## Install and sign in
@@ -112,6 +112,7 @@ When the user has credit and wants a real run:
 ```bash
 compute gpu list
 compute run simple_mlp.py::train --gpu H100-SXM --wait --yes --args '{"steps": 40, "seed": 20260814}'
+compute run simple_mlp.py::train --provider vastai --gpu RTX-4090 --wait --yes
 ```
 
 - `--wait` streams until a terminal state and prints JSON.

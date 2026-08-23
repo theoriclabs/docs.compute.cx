@@ -29,7 +29,7 @@ compute run simple_mlp.py::train --gpu H100-SXM --wait --yes
 | Symbol | Role |
 |---|---|
 | `compute.App(name)` | Names the app in the upload. |
-| `compute.Image.cuda_pytorch()` | NVIDIA / H100 image. |
+| `compute.Image.cuda_pytorch()` | NVIDIA image (RunPod H100 and Vast.ai CUDA SKUs). |
 | `compute.Image.rocm_pytorch()` | AMD / MI300X image. |
 | `Image.<curated>().pip_install(...)` | Extra pip packages on that image. |
 | `@app.function(...)` | Marks the entrypoint. `gpu`, `image`, `timeout`. |
