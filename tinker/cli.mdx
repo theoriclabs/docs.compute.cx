@@ -1,0 +1,118 @@
+---
+title: Tinker CLI
+description: Create and work with Tinker training sessions.
+---
+
+The Tinker CLI supports two ownership models. Use a CLI-owned session for one command or one shell. Use a user-owned session when you want to keep the GPU warm across several commands.
+
+<Warning>
+  Session creation is limited to approved private-alpha accounts while provider canaries are pending. The commands and lifecycle below are already part of the public CLI.
+</Warning>
+
+## One command, automatic teardown
+
+```bash
+compute tinker run -- python train.py
+```
+
+The CLI creates a session, injects its SDK environment into `python train.py`, and stops the session when the child exits. It waits for terminal state and prints the checkpoint count. The process returns the child's exit code.
+
+Use safety caps for longer experiments:
+
+```bash
+compute tinker run \
+  --max-spend 25 \
+  --idle-timeout 45m \
+  -- python train.py
+```
+
+Write dollar values as `25` or quote the dollar sign as `'$25'`. An unquoted `$25` may be expanded by your shell before Compute sees it.
+
+## Interactive shell
+
+```bash
+compute tinker shell
+```
+
+The shell inherits the Tinker environment. Exiting it stops the CLI-owned session.
+
+## Keep a session warm
+
+Start creates a user-owned session. You stop it explicitly:
+
+```bash
+compute tinker start --wait
+compute tinker status
+compute tinker exec tns_... -- python train.py --steps 50
+compute tinker shell --session tns_...
+compute tinker stop tns_...
+```
+
+`exec` and `shell --session` leave a user-owned session running. Billing continues until `stop`, an idle or spend cap, low balance, or another lifecycle backstop ends the session.
+
+## Commands
+
+| Command | Behavior |
+|---|---|
+| `compute tinker run -- <command>` | Create or attach, inject SDK environment, run the child, then stop a CLI-owned session. |
+| `compute tinker shell` | Open `$SHELL` with the same CLI-owned lifecycle. |
+| `compute tinker start [--wait]` | Create a user-owned session. You are responsible for stopping it. |
+| `compute tinker exec <id> -- <command>` | Run a child against an existing session without stopping it. |
+| `compute tinker shell --session <id>` | Open a shell against an existing session without stopping it. |
+| `compute tinker status [id]` | List the live session or inspect one session. |
+| `compute tinker stop <id>` | Request teardown and wait for terminal state and checkpoint harvest. |
+| `compute tinker checkpoints <id>` | List harvested checkpoint names, sizes, SHA-256 hashes, and timestamps. |
+| `compute tinker connect <id>` | Legacy one-time key reveal. Prefer `run`, `exec`, or `shell`. |
+
+## Session flags
+
+These flags apply when a command may create a session:
+
+| Flag | Meaning |
+|---|---|
+| `--model` | Hugging Face model ID. The current supported value and default is `Qwen/Qwen3-4B-Instruct-2507`. |
+| `--provider` | `runpod` or `hotaisle`. Default: `runpod`. |
+| `--sku` | GPU SKU. Default: `H100-SXM`. |
+| `--cloud-type` | Provider cloud type. Defaults to `secure` for RunPod and `on_demand` for Hot Aisle. |
+| `--idle-timeout` | Idle auto-stop in human units, such as `30m` or `1h`. |
+| `--max-spend` | Hard session cap in dollars, such as `25`. |
+| `--yes` | Noninteractive mode. Fails rather than choosing what to do with another live session. |
+| `--no-wait-teardown` | Return after accepting stop instead of waiting for terminal state. |
+
+Run `compute tinker <command> --help` for the installed flag list.
+
+## One live session per account
+
+Starting a second session returns `provider_quota` and identifies the existing session. In an interactive terminal, `run` can attach, stop the old session and retry, or cancel. `--yes` never stops another session automatically.
+
+## Choose a GPU
+
+RunPod Secure H100-SXM is the default:
+
+```bash
+compute tinker run -- python train.py
+```
+
+Select Hot Aisle MI300X explicitly:
+
+```bash
+compute tinker run --provider hotaisle --sku MI300X -- python train.py
+```
+
+Each cold session downloads about 8 GB of model weights. The quote prints the hourly rate and safety settings before creation.
+
+## Credentials
+
+`run`, `exec`, and `shell` inject these variables only into the child process:
+
+| Variable | Value |
+|---|---|
+| `TINKER_API_KEY` | Compute-issued capability for this session. |
+| `TINKER_BASE_URL` | Session-specific training gateway URL. |
+| `TINKER_MODEL` | Pinned model ID for the session. |
+
+Use `connect` or `start --wait --print-exports` only when a tool cannot inherit the environment. Those paths print the key into terminal output.
+
+<Card title="Tinker quickstart" href="/tinker" icon="arrow-left">
+  Run the official cookbook or your own training script.
+</Card>

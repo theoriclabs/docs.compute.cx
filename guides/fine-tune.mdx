@@ -5,6 +5,10 @@ description: LoRA supervised fine-tune on a fresh MI300X. The homepage command i
 
 Use this when a public instruct model already works, but misses your tone, format, or domain. The run trains a LoRA adapter for a few steps and returns JSON metrics. The machine is gone when the function returns — adapters written under `/tmp` are not downloaded.
 
+<Note>
+  This page uses the general `compute run` function interface. If you want to drive training from your laptop with the official Tinker SDK and keep harvested checkpoints, read the [Tinker training API guide](/tinker). Tinker session creation is currently limited to approved private-alpha accounts.
+</Note>
+
 Public self-service for this guide is **MI300X**. Stock can be tight. A 70B dense model can fit in 192 GB; the copy-paste below uses a small public model so the first run finishes.
 
 Need install and credit first? [Install](/get-started/install), [sign in](/get-started/sign-in), then [add credit](/cli/credits).
@@ -163,7 +167,7 @@ compute run mi300x_lora_finetune.py::finetune --gpu MI300X --wait --yes \
 
 ## What you get back
 
-JSON with `train_loss`, step counts, and the device name. There is no checkpoint-resume API and no artifact download in v0.1.
+This `compute run` example returns JSON with `train_loss`, step counts, and the device name. It does not download the adapter written under `/tmp`. The separate [Tinker workflow](/tinker) harvests saved checkpoints when its training session stops; starting a new session from one of those checkpoints is not part of the first cut.
 
 If create is refused, send the request id to [Support](/support).
 

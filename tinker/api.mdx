@@ -1,0 +1,90 @@
+---
+title: Tinker SDK compatibility
+description: Point the official Tinker SDK at a Compute session URL.
+---
+
+Compute hosts SkyRL's Tinker-compatible server behind a session-specific `*.api.compute.cx` gateway. The official `tinker` SDK stays on your machine. Compute provides the base URL and a short-lived session capability.
+
+<Warning>
+  This surface is a private alpha. Compatibility tests pass in automation, but unchanged cookbook SFT and one-step RL have not completed the public H100 and MI300X canaries. Public session quotes remain closed until those tests pass.
+</Warning>
+
+## Create the client
+
+The primary path is to run your program under the Compute CLI:
+
+```bash
+compute tinker run -- python train.py
+```
+
+Inside `train.py`:
+
+```python
+import os
+
+import tinker
+
+service = tinker.ServiceClient(
+    base_url=os.environ["TINKER_BASE_URL"],
+    api_key=os.environ["TINKER_API_KEY"],
+)
+
+training = service.create_lora_training_client(
+    base_model=os.environ["TINKER_MODEL"],
+    rank=32,
+)
+```
+
+The official SDK can also read `TINKER_BASE_URL` and `TINKER_API_KEY` when you call `tinker.ServiceClient()` with no arguments.
+
+## Supported first cut
+
+| Surface | Support |
+|---|---|
+| Model | `Qwen/Qwen3-4B-Instruct-2507`, pinned revision |
+| Training | Single-tenant FSDP LoRA |
+| Losses | `cross_entropy`, `importance_sampling` |
+| GPUs | RunPod Secure H100-SXM or Hot Aisle MI300X |
+| SDK protocol | Tinker API under `/api/v1`, including protobuf requests used by current SDK clients |
+| Futures | Submit through the SDK and poll `retrieve_future` as usual |
+| Checkpoints | Save during training; Compute harvests files when the session stops |
+
+The gateway supports the training calls used for session and model creation, forward and backward passes, optimizer steps, sampling, weight save or load, and future retrieval. It forwards supported content types without translating the training payload.
+
+`ppo`, `cispo`, `dro`, `forward_backward_custom`, full-parameter training, multi-GPU sessions, and arbitrary Hugging Face model IDs are outside the first cut.
+
+## Authentication boundary
+
+Your Compute login authorizes the control-plane operation that creates the session. The Tinker SDK uses a different, session-scoped key at the training gateway.
+
+The CLI keeps that key in the child environment. The gateway accepts the SDK's `X-API-Key` header and bearer authentication, verifies the Compute-issued capability, and removes it before forwarding the request to the on-box server.
+
+Do not use your normal Compute API token as `TINKER_API_KEY`. Do not copy an on-box placeholder such as `tml-dummy`; it is not a customer credential.
+
+## Billing and lifecycle
+
+A Tinker session is billed while its GPU machine exists, in started minutes plus the platform fee shown by the quote. It is not billed at hosted Tinker token prices.
+
+CLI-owned `run` and `shell` sessions stop when the child exits. User-owned `start` sessions continue until you stop them or a safety control fires. One account can have one live Tinker session.
+
+## Checkpoints
+
+Training code saves through the normal Tinker SDK. During stop, Compute harvests available checkpoint files before terminating the provider machine.
+
+```bash
+compute tinker stop tns_...
+compute tinker checkpoints tns_...
+```
+
+The list includes each file's kind, byte size, SHA-256 hash, and creation time. Download the file from the session page in the [dashboard](https://compute.cx/tinker).
+
+Checkpoint download is supported. Starting a new session from an old checkpoint is not part of the first-cut customer workflow.
+
+<CardGroup cols={2}>
+  <Card title="Tinker quickstart" href="/tinker" icon="play">
+    Run a cookbook recipe with one Compute login.
+  </Card>
+  <Card title="Tinker CLI" href="/tinker/cli" icon="terminal">
+    Session ownership, safety flags, and teardown behavior.
+  </Card>
+</CardGroup>

@@ -1,0 +1,90 @@
+---
+title: Tinker training API
+description: Run the official Tinker SDK against a dedicated Compute GPU, then keep the checkpoint.
+---
+
+Tinker on Compute gives the official `tinker` SDK a dedicated training URL backed by one GPU. Your local script controls the training loop. Compute provisions the machine, meters it, and tears it down.
+
+<Warning>
+  Tinker is in private alpha. The CLI and operator path are shipped, but public product quotes remain closed until the H100 and MI300X canaries pass. A normal public account currently receives `sku_unavailable` when it tries to create a session.
+</Warning>
+
+## Why use it
+
+Use fine-tuning when a capable base model still misses the behavior your application needs. Supervised fine-tuning teaches from prompt and ideal-response pairs. Reinforcement learning is useful when you can score an answer more easily than you can write the ideal one.
+
+The first Compute preset runs LoRA training on `Qwen/Qwen3-4B-Instruct-2507`. It supports cross-entropy for supervised work and importance sampling for RL-shaped loops.
+
+## Run a cookbook recipe
+
+Install the current CLI, sign in, and add prepaid credit first:
+
+```bash
+curl -fsSL https://compute.cx/install.sh | sh
+compute setup
+compute credits add 10
+```
+
+Approved alpha accounts can run the upstream cookbook without exporting a second credential:
+
+```bash
+git clone https://github.com/thinking-machines-lab/tinker-cookbook.git
+cd tinker-cookbook
+
+compute tinker run --max-spend 25 --idle-timeout 45m -- \
+  uv run --with tinker --with datasets \
+  python -m tinker_cookbook.recipes.sl_loop \
+  model_name=Qwen/Qwen3-4B-Instruct-2507
+```
+
+`compute tinker run` does five things:
+
+1. Quotes and provisions a Tinker session.
+2. Waits for its public training URL to become healthy.
+3. Injects `TINKER_API_KEY`, `TINKER_BASE_URL`, and `TINKER_MODEL` into the child process.
+4. Runs the command and forwards its exit status and terminal signals.
+5. Stops the CLI-owned session and waits for checkpoint harvest.
+
+The SDK key is not printed or added to your outer shell.
+
+## Run your own script
+
+Your script can build the official client from the injected environment:
+
+```python
+import os
+
+import tinker
+
+service = tinker.ServiceClient(
+    base_url=os.environ["TINKER_BASE_URL"],
+    api_key=os.environ["TINKER_API_KEY"],
+)
+```
+
+Then run it through the same lifecycle:
+
+```bash
+compute tinker run --max-spend 25 -- python train.py
+```
+
+`tinker.ServiceClient()` with no arguments also reads the two official environment variables. Do not hard-code the hosted Tinker URL; each Compute session has its own `https://tinker-<id>.api.compute.cx` base URL.
+
+## What you get
+
+The training script receives the normal Tinker futures and results. When the session stops, Compute harvests saved weights to object storage. List the available files with:
+
+```bash
+compute tinker checkpoints tns_...
+```
+
+Download a harvested checkpoint from the session page in the [dashboard](https://compute.cx/tinker). The CLI currently lists checkpoints but does not download them.
+
+<CardGroup cols={2}>
+  <Card title="CLI lifecycle" href="/tinker/cli" icon="terminal">
+    Choose between one-shot runs, interactive shells, and warm user-owned sessions.
+  </Card>
+  <Card title="SDK compatibility" href="/tinker/api" icon="code">
+    Check the supported model and API boundaries, including the SDK environment and losses.
+  </Card>
+</CardGroup>

@@ -79,6 +79,10 @@
       {
         "group": "Reference",
         "pages": ["sdk", "billing", "limits", "support"]
+      },
+      {
+        "group": "Tinker training",
+        "pages": ["tinker/index", "tinker/cli", "tinker/api"]
       }
     ]
   },
