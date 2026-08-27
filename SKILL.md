@@ -18,7 +18,7 @@ Compute uploads a Python function, provisions a **new** GPU machine for that run
 
 Human manual: `https://docs.compute.cx`
 
-MCP (stdio): `compute mcp` after the CLI is installed and signed in.
+MCP (stdio): `compute mcp` after the CLI is installed and signed in. MCP (hosted, Streamable HTTP): `https://mcp.compute.cx/mcp` — no local install; use when the caller cannot spawn a local process.
 
 ## Rules
 
@@ -51,6 +51,10 @@ export COMPUTE_API_KEY='ck_live_…'
 
 ## MCP server
 
+Two ways to reach Compute over MCP: a local stdio process for hosts that can spawn one, and a hosted Streamable HTTP endpoint for hosts that cannot.
+
+### Local (stdio)
+
 `compute mcp` is a stdio Model Context Protocol server. The host (Cursor, Claude Code, Codex, and similar) must spawn it. Do not run it in an interactive shell.
 
 Cursor `mcp.json` (project or `~/.cursor/mcp.json`):
@@ -68,13 +72,21 @@ Cursor `mcp.json` (project or `~/.cursor/mcp.json`):
 
 The process uses `COMPUTE_API_KEY` or `~/.compute/config.toml`. After `compute setup`, no extra env is required.
 
-Prefer MCP tools for catalog, credits, status, logs, receipts, cancel, and secrets. Prefer `compute_dry_run` then `compute_run` (with `confirm_spend=true`) when the working tree has the entrypoint file. `compute_run` without `confirm_spend=true` must be treated as a refusal.
+Prefer `compute_dry_run` then `compute_run` (with `confirm_spend=true`) when the working tree has the entrypoint file — this is the only MCP path that can launch a run, because only a locally-spawned process can read the entrypoint file to build the upload. `compute_run` without `confirm_spend=true` must be treated as a refusal.
 
 One-click Cursor deeplink (after the CLI is on PATH):
 
 `cursor://anysphere.cursor-deeplink/mcp/install?name=compute&config=eyJjb21tYW5kIjoiY29tcHV0ZSIsImFyZ3MiOlsibWNwIl19`
 
 Portable Agent Plugin (skill + MCP install): the public docs repo `theoriclabs/docs.compute.cx` (`plugin.json`, `mcp.json`, `skills/compute/SKILL.md`). Submit/install from [Cursor Marketplace](https://cursor.com/marketplace) or a team marketplace that imports that repo.
+
+### Hosted (Streamable HTTP + OAuth)
+
+`https://mcp.compute.cx/mcp` — for cloud/hosted agents (Claude.ai- or ChatGPT-style connectors, background agents) that cannot spawn a local process. No CLI install, no `COMPUTE_API_KEY`.
+
+Auth is Clerk OAuth 2.1 + PKCE. Discover it from `https://mcp.compute.cx/.well-known/oauth-protected-resource/mcp`; a request without a valid token gets `401` with a `WWW-Authenticate` header pointing at that same discovery document. **Dynamic Client Registration is not yet enabled** — connecting today requires an OAuth client already registered in the Clerk dashboard, not self-registration by an arbitrary agent.
+
+Read/management tools only: `compute_whoami`, `compute_credits`, `compute_credits_add`, `compute_usage`, `compute_list_gpus`, `compute_list_runs`, `compute_get_run`, `compute_get_logs`, `compute_get_receipt`, `compute_cancel_run`, `compute_list_machines`, `compute_delete_machine`, `compute_list_secrets`, `compute_set_secret`, `compute_delete_secret`, `compute_list_artifacts`, `compute_get_result`. **No `compute_run` or `compute_dry_run`** — a hosted server cannot read a caller's local files to build the upload. To launch or dry-run a job, use the local stdio server above.
 
 ## Credit
 
