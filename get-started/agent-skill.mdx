@@ -31,7 +31,7 @@ That is enough for Cursor, Claude Code, Codex, and similar tools that can fetch 
 
 ## MCP
 
-After the CLI is installed, agents can call Compute as tools instead of shelling out. See [MCP server](/get-started/mcp).
+After the CLI is installed, agents can call Compute as tools instead of shelling out. Cloud/hosted agents that cannot spawn a local process can instead reach `https://mcp.compute.cx/mcp` over Streamable HTTP with Clerk OAuth — read/management tools only, no `compute_run`/`compute_dry_run`. See [MCP server](/get-started/mcp) for both.
 
 ```json
 {
