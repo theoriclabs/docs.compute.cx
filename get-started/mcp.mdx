@@ -1,0 +1,73 @@
+---
+title: MCP server
+description: Let Cursor, Claude Code, or Codex call Compute through the Model Context Protocol.
+---
+
+The Compute CLI includes a stdio [MCP](https://modelcontextprotocol.io) server. After install and sign-in, an agent can list GPUs, check credit, dry-run a payload, submit a run (with explicit spend confirmation), follow status, and cancel.
+
+The Agent Skill at [https://compute.cx/SKILL.md](https://compute.cx/SKILL.md) is the workflow. MCP is the tool surface.
+
+<Warning>
+`compute_run` spends prepaid credit. It requires `confirm_spend=true`. `compute_dry_run` prints the upload plan and creates **no** machine.
+</Warning>
+
+## Install the CLI
+
+```bash
+curl -fsSL https://compute.cx/install.sh | sh
+compute setup
+compute doctor --json
+```
+
+`compute mcp` is not a human command. The host spawns it and speaks JSON-RPC on stdin/stdout.
+
+## Cursor
+
+Project or user `mcp.json`:
+
+```json
+{
+  "mcpServers": {
+    "compute": {
+      "command": "compute",
+      "args": ["mcp"]
+    }
+  }
+}
+```
+
+The server reads `COMPUTE_API_KEY` or `~/.compute/config.toml`. After `compute setup`, no extra env is required.
+
+Cursor install link (CLI must already be on `PATH`):
+
+[Add Compute MCP](cursor://anysphere.cursor-deeplink/mcp/install?name=compute&config=eyJjb21tYW5kIjoiY29tcHV0ZSIsImFyZ3MiOlsibWNwIl19)
+
+## What the tools do
+
+| Tool | Spends? | Notes |
+|---|---|---|
+| `compute_doctor` | No | Connectivity and sanitized auth |
+| `compute_list_gpus` | No | Live SKUs — do not invent names |
+| `compute_credits` / `compute_credits_add` | Checkout only | Top-up minimum $10; credit lands after the webhook |
+| `compute_dry_run` | No | AST plan only; no upload |
+| `compute_run` | Yes | Requires `confirm_spend=true` |
+| `compute_get_run` / `compute_get_logs` / `compute_get_receipt` | No | Inspect |
+| `compute_cancel_run` | No | Idempotent teardown |
+| `compute_list_secrets` / `compute_set_secret` | No | Values are never returned |
+
+Do not paste API keys, `config.toml`, Checkout session ids, or secret values into the agent chat.
+
+## Plugin (skill + MCP)
+
+This docs repository is also an [Agent Plugin](https://agent-plugins.org): `plugin.json`, `mcp.json`, and `skills/compute/SKILL.md`. Import the repo into a [Cursor team marketplace](https://cursor.com/docs/plugins), or submit it at [cursor.com/marketplace/publish](https://cursor.com/marketplace/publish).
+
+The skill is also a raw file:
+
+```bash
+curl -fsSL https://compute.cx/SKILL.md
+curl -fsSL https://compute.cx/.well-known/skills/compute/SKILL.md
+```
+
+## Next
+
+[Agent Skill](/get-started/agent-skill) is the spend-aware workflow. [Run](/cli/run) is the flag reference.

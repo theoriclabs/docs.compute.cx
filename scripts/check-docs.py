@@ -129,12 +129,38 @@ def check_skill_file() -> list[str]:
         errors.append("SKILL.md frontmatter is missing name")
     if not re.search(r"^description:\s*\S", body, re.MULTILINE):
         errors.append("SKILL.md frontmatter is missing description")
+    if "compute mcp" not in text:
+        errors.append("SKILL.md must document the compute mcp server")
+    if "confirm_spend" not in text:
+        errors.append("SKILL.md must document MCP confirm_spend")
+    plugin_skill = ROOT / "skills" / "compute" / "SKILL.md"
+    if not plugin_skill.is_file():
+        errors.append("skills/compute/SKILL.md is missing (Agent Plugin skill)")
+    elif plugin_skill.read_text(encoding="utf-8") != text:
+        errors.append("skills/compute/SKILL.md must match SKILL.md")
+    plugin = ROOT / "plugin.json"
+    if not plugin.is_file():
+        errors.append("plugin.json is missing (Agent Plugin manifest)")
+    mcp = ROOT / "mcp.json"
+    if not mcp.is_file():
+        errors.append("mcp.json is missing (Agent Plugin MCP install)")
+    else:
+        mcp_text = mcp.read_text(encoding="utf-8")
+        if '"command": "compute"' not in mcp_text or '"mcp"' not in mcp_text:
+            errors.append("mcp.json must spawn `compute mcp`")
     page = ROOT / "get-started" / "agent-skill.mdx"
     if page.is_file() and CANONICAL_SKILL not in page.read_text(encoding="utf-8"):
         errors.append("get-started/agent-skill.mdx must link to https://compute.cx/SKILL.md")
+    mcp_page = ROOT / "get-started" / "mcp.mdx"
+    if not mcp_page.is_file():
+        errors.append("get-started/mcp.mdx is missing")
+    elif CANONICAL_SKILL not in mcp_page.read_text(encoding="utf-8"):
+        errors.append("get-started/mcp.mdx must link to https://compute.cx/SKILL.md")
     home = ROOT / "index.mdx"
     if home.is_file() and "/get-started/agent-skill" not in home.read_text(encoding="utf-8"):
         errors.append("index.mdx must link to /get-started/agent-skill")
+    if home.is_file() and "/get-started/mcp" not in home.read_text(encoding="utf-8"):
+        errors.append("index.mdx must link to /get-started/mcp")
     return errors
 
 
