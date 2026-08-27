@@ -18,9 +18,11 @@ python3 scripts/check-docs.py --strict
 
 Every showcased `file.py::function` must include source on the page or link to a page/file that does. CI also requires `https://compute.cx/SKILL.md` to return HTTP 200 before the Agent Skill page ships.
 
+This repo is also the public **Agent Plugin** (`plugin.json`, `mcp.json`, `skills/compute/SKILL.md`) so Cursor can install the Compute skill and `compute mcp` server. The MCP implementation lives in the product CLI, not here.
+
 ## What belongs here
 
-Honest CLI / SDK pages that match live behavior: install via `curl|sh`, `compute setup`, prepaid credits, `run` / logs / cancel, reserved H100-SXM, MI300X, Vast.ai interruptible SKUs, billing rules without inventing a fee percentage. Workload pages under `guides/` must include the `file.py::function` source they tell people to run.
+Honest CLI / SDK pages that match live behavior: install via `curl|sh`, `compute setup`, prepaid credits, `run` / logs / cancel, reserved H100-SXM, MI300X, Vast.ai interruptible SKUs, billing rules without inventing a fee percentage. Workload pages under `guides/` must include the `file.py::function` source they tell people to run. Keep `SKILL.md` identical to `skills/compute/SKILL.md`.
 
 Do not add internal design docs, OpenAPI playgrounds, or unshipped surfaces (PyPI, persistent disks, RunPod Community).
 

@@ -15,27 +15,46 @@ Agents should fetch this file:
 curl -fsSL https://compute.cx/SKILL.md
 ```
 
+The same document is also at `https://compute.cx/.well-known/skills/compute/SKILL.md`.
+
 <Warning>
-GPU runs spend prepaid credit. `--yes` skips the interactive price confirmation and still bills. `--dry-run` prints the upload plan and creates **no** machine.
+GPU runs spend prepaid credit. `--yes` and MCP `compute_run` with `confirm_spend=true` skip the interactive price confirmation and still bill. `--dry-run` and `compute_dry_run` print the upload plan and create **no** machine.
 </Warning>
 
 ## What to tell the agent
 
 ```text
-Follow https://compute.cx/SKILL.md. Dry-run first. Do not pass --yes until I confirm spend.
+Follow https://compute.cx/SKILL.md. Dry-run first. Do not pass --yes or confirm_spend until I confirm spend.
 ```
 
 That is enough for Cursor, Claude Code, Codex, and similar tools that can fetch a URL.
+
+## MCP
+
+After the CLI is installed, agents can call Compute as tools instead of shelling out. See [MCP server](/get-started/mcp).
+
+```json
+{
+  "mcpServers": {
+    "compute": {
+      "command": "compute",
+      "args": ["mcp"]
+    }
+  }
+}
+```
+
+This repository also ships as an Agent Plugin (`plugin.json` + `skills/compute/SKILL.md` + `mcp.json`) for Cursor team marketplaces and [marketplace publish](https://cursor.com/marketplace/publish).
 
 ## What the skill does
 
 1. Installs with `curl -fsSL https://compute.cx/install.sh | sh` and `compute setup`.
 2. Writes the tested `simple_mlp.py` example from [First run](/get-started/first-run).
-3. Runs `compute run simple_mlp.py::train --gpu H100-SXM --dry-run` (no machine).
-4. On your confirmation, submits with `--wait --yes` and checks teardown via `compute machines`.
+3. Runs `compute run simple_mlp.py::train --gpu H100-SXM --dry-run` (no machine), or MCP `compute_dry_run`.
+4. On your confirmation, submits with `--wait --yes` or `compute_run` + `confirm_spend=true` and checks teardown via `compute machines`.
 
 Do not paste API keys, `config.toml`, or Checkout session ids into the agent chat.
 
 ## Next
 
-[First run](/get-started/first-run) is the same example, written for a human. [Run](/cli/run) is the flag reference.
+[MCP server](/get-started/mcp) is the tool surface. [First run](/get-started/first-run) is the same example, written for a human. [Run](/cli/run) is the flag reference.

@@ -55,7 +55,8 @@
           "get-started/install",
           "get-started/sign-in",
           "get-started/first-run",
-          "get-started/agent-skill"
+          "get-started/agent-skill",
+          "get-started/mcp"
         ]
       },
       {

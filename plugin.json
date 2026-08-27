@@ -1,0 +1,14 @@
+{
+  "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
+  "name": "compute",
+  "version": "0.1.0",
+  "description": "Run Python functions on fresh cloud GPUs with the Compute CLI, Agent Skill, and MCP server.",
+  "author": {
+    "name": "Compute",
+    "url": "https://compute.cx"
+  },
+  "homepage": "https://docs.compute.cx/get-started/mcp",
+  "repository": "https://github.com/theoriclabs/docs.compute.cx",
+  "license": "MIT",
+  "keywords": ["compute", "gpu", "mcp", "cli", "skill"]
+}
