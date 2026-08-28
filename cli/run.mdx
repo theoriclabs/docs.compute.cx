@@ -1,10 +1,10 @@
 ---
 title: Run
-description: Upload a Python file, enqueue a function, optionally wait for JSON.
+description: Run a Python function on a selected GPU, or let Compute route it from the workload.
 ---
 
 ```bash
-compute run <file.py>::<function> --gpu <sku> [options]
+compute run <file.py>::<function> --gpu <sku|policy> [options]
 ```
 
 Example ([source](/get-started/first-run)):
@@ -13,18 +13,41 @@ Example ([source](/get-started/first-run)):
 compute run simple_mlp.py::train --gpu H100-SXM --wait --yes
 ```
 
-`--gpu H100` is an alias for reserved `H100-SXM`. `--gpu MI300X` is the AMD SKU. `--provider vastai --gpu RTX-4090` is a cheaper interruptible card. `--yes` skips the interactive spend confirmation.
+Pass a GPU SKU to pin the machine, or pass `auto`, `fastest`, or `cheapest` to route the workload. `--yes` skips the interactive spend confirmation.
+
+## Automatic routing
+
+```bash
+compute run simple_mlp.py::train --gpu auto
+compute run simple_mlp.py::train --gpu fastest
+compute run simple_mlp.py::train --gpu cheapest
+```
+
+| Policy | Selection objective |
+|---|---|
+| `auto` | Balance predicted execution time and provider cost by minimizing the worst relative tradeoff. |
+| `fastest` | Choose the compatible candidate with the lowest predicted execution time. |
+| `cheapest` | Choose the compatible candidate with the lowest predicted provider execution cost. |
+
+For a policy run, the CLI packages and uploads the source closure and attaches a typed Torch graph when it can capture one. Compute analyzes the workload, filters out incompatible candidates, and scores each remaining provider/GPU pair against a target-specific hardware profile.
+
+The preflight quote shows the selected provider and GPU, locked rate, execution estimate, analysis warnings, and projected billed total. The CLI creates no run until you approve that quote or pass `--yes`.
+
+Routing uses execution time and provider execution cost. Queue and machine startup time are not part of the current score. If the analysis cannot establish facts such as accelerator compatibility or a safe memory bound, Compute returns an analysis error instead of guessing. If the API marks a quote as a selector fallback, the CLI refuses it unless you pass `--allow-selector-fallback`.
+
+Automatic routing is opt-in. With no `--gpu`, Compute uses the decorator's GPU selection or defaults to `hotaisle/MI300X`.
 
 ## Flags
 
 | Flag | Meaning |
 |---|---|
-| `--gpu` | SKU. Required unless the `@app.function` decorator already set one. |
-| `--provider` | Optional pin (`runpod`, `hotaisle`, `vastai`). Required when a SKU name exists on more than one provider. |
+| `--gpu` | GPU SKU, `PROVIDER/SKU`, or policy: `auto`, `fastest`, `cheapest`. |
+| `--provider` | Pin a SKU or scope a policy to `runpod`, `hotaisle`, or `vastai`. Required when a SKU name exists on more than one provider. |
+| `--allow-selector-fallback` | Accept a quote that the selector marks as a fallback. |
 | `--wait` | Stream until terminal; print JSON result. Default is detach after create. |
 | `--timeout` | Function timeout in seconds. Default **600** (10 minutes). |
 | `--args` | JSON object for function kwargs. |
-| `--dry-run` | Print the upload plan. No upload, no machine. |
+| `--dry-run` | Print the local source and upload plan. No upload, remote analysis, quote, or machine. |
 | `--yes` | Skip interactive confirmation. |
 | `--json` | (global) machine-readable envelope. |
 
@@ -32,14 +55,25 @@ compute run simple_mlp.py::train --gpu H100-SXM --wait --yes
 
 ## What happens
 
-1. The CLI packages the target file (and what it imports from the project).
-2. The API enqueues a run if admission and credit allow it.
-3. A worker provisions a **new** machine, installs the image, runs the function, streams logs, then **terminates** the machine.
-4. You get a JSON return value, a receipt, and an empty `compute machines` list.
+1. The CLI analyzes and packages the target file and its local imports.
+2. It uploads the payload and requests a rate-locked quote.
+3. For a routing policy, Compute analyzes the workload and selects a compatible provider/GPU pair.
+4. The CLI shows the preflight quote and asks for confirmation.
+5. The API creates the run if admission and credit allow it.
+6. A worker provisions a **new** machine, installs the image, runs the function, streams logs, then **terminates** the machine.
+7. You get a JSON return value, a receipt, and an empty `compute machines` list.
 
 ## Provider vs SKU
 
-You pick a GPU name. Compute picks the provider unless you pass `--provider`. You do not pick a region or an instance template.
+An explicit SKU pins the hardware. Compute resolves its provider unless the SKU is ambiguous, in which case you must pass `--provider` or use `PROVIDER/SKU`.
+
+A provider can also scope a routing policy:
+
+```bash
+compute run simple_mlp.py::train --gpu cheapest --provider vastai
+```
+
+Use `--provider` for a policy rather than writing `vastai/cheapest`. You do not pick a region or an instance template.
 
 ## Detached vs wait
 
