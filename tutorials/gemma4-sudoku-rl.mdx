@@ -1,0 +1,134 @@
+---
+title: Gemma 4 Sudoku RL with Unsloth
+description: Train a Gemma 4 E2B LoRA with GRPO rewards on a fresh NVIDIA GPU.
+---
+
+This tutorial turns Unsloth's Gemma 4 Sudoku notebook into one Compute function. Gemma writes a native Python Sudoku strategy, three reward functions score it, and GRPO updates a LoRA adapter from those scores.
+
+The default is a one-step smoke run. It downloads the public `unsloth/gemma-4-E2B-it` checkpoint, trains on an NVIDIA GPU, saves the adapter, checks every saved LoRA tensor, and returns JSON metrics before Compute terminates the machine.
+
+<Note>
+  [`gemma4_sudoku_rl.py`](/examples/gemma4_sudoku_rl.py) is adapted from [Unsloth's Gemma 4 Sudoku notebook](https://github.com/unslothai/notebooks/blob/main/nb/Gemma4_%28E2B%29_Reinforcement_Learning_Sudoku_Game.ipynb). This example is explicitly licensed `LGPL-3.0-only`; its SPDX header and source notice are part of the file. That license notice applies to this adapted example.
+</Note>
+
+## Before you start
+
+Install Compute, sign in, and add prepaid credit:
+
+```bash
+curl -fsSL https://compute.cx/install.sh | sh
+compute setup
+compute credits add 10
+```
+
+You do not need a Hugging Face token for the default public model.
+
+## Save the example
+
+Download the complete script:
+
+```bash
+curl -L https://raw.githubusercontent.com/theoriclabs/docs.compute.cx/main/examples/gemma4_sudoku_rl.py \
+  -o gemma4_sudoku_rl.py
+```
+
+The file defines `gemma4_sudoku_rl.py::train`. Its Compute image starts from CUDA PyTorch. The function installs pinned Unsloth packages, then applies the newer Transformers and TRL versions used by the upstream notebook. Installing inside the function puts dependency output in the run log. GPU-only imports happen afterward.
+
+The core training setup is:
+
+```python
+app = compute.App("gemma4-sudoku-grpo")
+image = compute.Image.cuda_pytorch()
+
+
+@app.function(gpu="H100-SXM", image=image, timeout=3600)
+def train(
+    model_id: str = "unsloth/gemma-4-E2B-it",
+    max_steps: int = 1,
+    dataset_size: int = 64,
+    difficulty: int = 40,
+    max_seq_length: int = 4096,
+    lora_rank: int = 32,
+    num_generations: int = 2,
+    seed: int = 3407,
+) -> dict:
+    # Model loading, Sudoku rewards, GRPO training, and adapter verification
+    # are implemented in the linked example file.
+    ...
+```
+
+## Inspect the payload
+
+Run a local dry-run first:
+
+```bash
+compute run gemma4_sudoku_rl.py::train --gpu H100-SXM --dry-run
+```
+
+The output should list `cuda_pytorch` and the `train` entrypoint. A dry-run does not upload the file, request a quote, or create a machine.
+
+## Run one training step
+
+An RTX 4090 has enough memory for the default E2B run. Vast.ai capacity is interruptible, so Compute may end the run if the provider reclaims the machine:
+
+```bash
+compute run gemma4_sudoku_rl.py::train \
+  --provider vastai \
+  --gpu RTX-4090 \
+  --timeout 1800 \
+  --wait
+```
+
+The CLI prints a quote and asks before spending credit. Keep the prompt for the first run. Use the reserved H100 path when you prefer steadier capacity:
+
+```bash
+compute run gemma4_sudoku_rl.py::train \
+  --gpu H100-SXM \
+  --timeout 1800 \
+  --wait
+```
+
+Package installation and model download happen on the new machine, so the first log lines can take several minutes. `--wait` keeps the logs attached through training and teardown.
+
+## How the reward works
+
+Each prompt asks Gemma to return `def strategy(board, initial)` in a Python code block. The generated function gets three scores:
+
+1. `function_works` checks the exact signature and verifies that Unsloth can create a locked-down callable.
+2. `no_cheating` rejects imports and gives them a heavy penalty.
+3. `strategy_succeeds` runs the function against a generated puzzle. A complete solution earns `30.0`; partial progress earns `0.2` per valid move.
+
+Every completion in a GRPO group sees the same puzzle seed, which keeps comparisons within that group fair. The default group has two completions and uses the notebook's BNPO loss settings.
+
+## Read the result
+
+The final value is JSON. It includes the device and package versions, aggregate `train_loss`, per-step `loss_history` and `reward_history`, elapsed training time, and an `adapter_verified` flag. Inspect the histories instead of treating a successful exit as proof that the short training run improved. The exact metrics vary because generation and GPU training are stochastic.
+
+The example writes the adapter to `/tmp/gemma4-sudoku-lora` and opens `adapter_model.safetensors` before returning. The run fails if the file is empty or any adapter tensor is all zero.
+
+<Warning>
+  The adapter path is inside the temporary machine. Compute v0.1 terminates that machine when `train` returns and does not expose artifact download for this workflow. This tutorial verifies the training path and returns metrics; the saved adapter does not persist after teardown.
+</Warning>
+
+## Train for longer
+
+The upstream notebook uses 60 steps and 1,000 copies of the prompt. Run that shape on reserved capacity with a longer timeout:
+
+```bash
+compute run gemma4_sudoku_rl.py::train \
+  --gpu H100-SXM \
+  --args '{"max_steps":60,"dataset_size":1000}' \
+  --timeout 21600 \
+  --wait
+```
+
+The quote uses the timeout as a spending ceiling. The machine still terminates as soon as the function returns.
+
+<CardGroup cols={2}>
+  <Card title="General reinforcement learning" href="/guides/rl">
+    Run a smaller GRPO example on MI300X.
+  </Card>
+  <Card title="CLI run reference" href="/cli/run">
+    Pass arguments, choose a GPU, and control the timeout.
+  </Card>
+</CardGroup>
