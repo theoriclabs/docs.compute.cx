@@ -60,6 +60,12 @@
         ]
       },
       {
+        "group": "Tutorials",
+        "pages": [
+          "tutorials/gemma4-sudoku-rl"
+        ]
+      },
+      {
         "group": "Guides",
         "pages": [
           "guides/fine-tune",
