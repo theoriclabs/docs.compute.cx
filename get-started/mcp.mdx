@@ -3,7 +3,7 @@ title: MCP server
 description: Let Cursor, Claude Code, or Codex call Compute through the Model Context Protocol.
 ---
 
-Compute has two [MCP](https://modelcontextprotocol.io) servers: a **local stdio** server bundled with the CLI, and a **hosted** Streamable HTTP server at `mcp.compute.cx` for agents that cannot spawn a local process. After install and sign-in (or, for the hosted server, an OAuth connect), an agent can list GPUs, check credit, follow status, and manage secrets; only the local server can dry-run and submit a run, since only it can read the entrypoint file on disk.
+Compute has two [MCP](https://modelcontextprotocol.io) servers: a **local stdio** server bundled with the CLI, and a **hosted** Streamable HTTP server at `mcp.compute.cx` for agents that cannot spawn a local process. After install and sign-in (or, for the hosted server, an OAuth connect), an agent can list GPUs, check credit, follow status, and manage secrets; both can dry-run and submit a run: the local server reads the entrypoint file from disk, the hosted server takes the Python source inline.
 
 The Agent Skill at [https://compute.cx/SKILL.md](https://compute.cx/SKILL.md) is the workflow. MCP is the tool surface.
 
@@ -73,11 +73,11 @@ No CLI install and no `COMPUTE_API_KEY` — authentication is Clerk OAuth 2.1 wi
 curl https://mcp.compute.cx/.well-known/oauth-protected-resource/mcp
 ```
 
-<Warning>
-Dynamic Client Registration is not yet enabled on the hosted server. Connecting today requires an OAuth client already registered in the Clerk dashboard — an arbitrary agent cannot self-register yet.
-</Warning>
+<Note>
+Dynamic Client Registration is enabled. The authorization server at `https://clerk.compute.cx` publishes a `registration_endpoint`, so an MCP host self-registers its client and completes the browser consent; nothing has to be pre-registered. The consent signs in the Compute account whose prepaid credit the runs will spend.
+</Note>
 
-The hosted server exposes read/management tools only — `compute_whoami`, `compute_credits`, `compute_credits_add`, `compute_usage`, `compute_list_gpus`, `compute_list_runs`, `compute_get_run`, `compute_get_logs`, `compute_get_receipt`, `compute_cancel_run`, `compute_list_machines`, `compute_delete_machine`, `compute_list_secrets`, `compute_set_secret`, `compute_delete_secret`, `compute_list_artifacts`, `compute_get_result`. There is no hosted `compute_run` or `compute_dry_run`: a hosted server has no access to the calling agent's local files to build the upload. Use the local stdio server above to launch or dry-run a job.
+The hosted server exposes the full tool set: the 19 tools above plus `compute_report_issue` and `compute_get_report`. The difference is the input of `compute_dry_run` and `compute_run`: instead of a `project_root`, they take the Python source inline as `files`, an array of `{path, content}` holding the entrypoint and every local module it imports (at most 64 `.py` files, 2 MiB total); third-party packages go in `pip`. The API plans the import closure from those files, so the hosted server never needs the calling agent's disk. `compute_run` still requires `confirm_spend=true`.
 
 ## Plugin (skill + MCP)
 

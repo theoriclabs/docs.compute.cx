@@ -27,7 +27,7 @@ MCP (stdio): `compute mcp` after the CLI is installed and signed in. MCP (hosted
 - Do not invent files. The first example below is complete; write it to disk before `compute run` or `compute_dry_run`.
 - Do not paste `COMPUTE_API_KEY`, `~/.compute/config.toml`, Checkout session ids, or secret values into chat logs.
 - Do not use `pip install compute`. v0.1 install is `curl|sh` only.
-- Live SKUs come from `compute gpu list`, MCP `compute_list_gpus`, and https://compute.cx/gpus. Do not pass a name that list does not show. Public reserved lead is **H100-SXM** (`H100` and `H100-80GB` are aliases). **MI300X** is AMD. Vast.ai spot SKUs include **RTX-3090**, **RTX-4090**, **RTX-5090**, **L4**, **A100-40GB**, **A100-80GB**, and **H100-SXM** — pass `--provider vastai` or `vastai/<SKU>`. Spot capacity can be reclaimed; Compute then ends the run and tears the machine down. Do not invent a $/hr number; use `compute gpu list` or `compute_list_gpus`.
+- Live SKUs come from `compute gpu list`, MCP `compute_list_gpus`, and https://compute.cx/gpus. Do not pass a name that list does not show. `--gpu` may be a SKU, `PROVIDER/SKU`, or a policy: `auto`, `fast`, `cheap` (`fastest` / `cheapest` also accepted). Policies pick from the live catalog — confirm the quoted SKU and rate before spend. Public reserved lead is **H100-SXM** (`H100` and `H100-80GB` are aliases). **MI300X** is AMD. Vast.ai spot SKUs include **RTX-3090**, **RTX-4090**, **RTX-5090**, **L4**, **A100-40GB**, **A100-80GB**, and **H100-SXM** — pass `--provider vastai` or `vastai/<SKU>`. Spot capacity can be reclaimed; Compute then ends the run and tears the machine down. Do not invent a $/hr number; use `compute gpu list` or `compute_list_gpus`.
 - One active run per account. Spend, create-rate, and provider capacity can refuse a create even with a positive balance.
 
 ## Install and sign in
@@ -72,7 +72,7 @@ Cursor `mcp.json` (project or `~/.cursor/mcp.json`):
 
 The process uses `COMPUTE_API_KEY` or `~/.compute/config.toml`. After `compute setup`, no extra env is required.
 
-Prefer `compute_dry_run` then `compute_run` (with `confirm_spend=true`) when the working tree has the entrypoint file — this is the only MCP path that can launch a run, because only a locally-spawned process can read the entrypoint file to build the upload. `compute_run` without `confirm_spend=true` must be treated as a refusal.
+Prefer `compute_dry_run` then `compute_run` (with `confirm_spend=true`) when the working tree has the entrypoint file: the local server reads it from disk to build the upload. (The hosted server below takes the source inline instead.) `compute_run` without `confirm_spend=true` must be treated as a refusal.
 
 One-click Cursor deeplink (after the CLI is on PATH):
 
@@ -84,9 +84,9 @@ Portable Agent Plugin (skill + MCP install): the public docs repo `theoriclabs/d
 
 `https://mcp.compute.cx/mcp` — for cloud/hosted agents (Claude.ai- or ChatGPT-style connectors, background agents) that cannot spawn a local process. No CLI install, no `COMPUTE_API_KEY`.
 
-Auth is Clerk OAuth 2.1 + PKCE. Discover it from `https://mcp.compute.cx/.well-known/oauth-protected-resource/mcp`; a request without a valid token gets `401` with a `WWW-Authenticate` header pointing at that same discovery document. **Dynamic Client Registration is not yet enabled** — connecting today requires an OAuth client already registered in the Clerk dashboard, not self-registration by an arbitrary agent.
+Auth is Clerk OAuth 2.1 + PKCE with Dynamic Client Registration. Discover it from `https://mcp.compute.cx/.well-known/oauth-protected-resource/mcp`; a request without a valid token gets `401` with a `WWW-Authenticate` header pointing at that same discovery document. The authorization server (`https://clerk.compute.cx`) publishes a `registration_endpoint`, so an MCP host can self-register a client and complete the browser consent without anything pre-registered. The consent signs in the Compute account whose prepaid credit the runs will spend.
 
-Read/management tools only: `compute_whoami`, `compute_credits`, `compute_credits_add`, `compute_usage`, `compute_list_gpus`, `compute_list_runs`, `compute_get_run`, `compute_get_logs`, `compute_get_receipt`, `compute_cancel_run`, `compute_list_machines`, `compute_delete_machine`, `compute_list_secrets`, `compute_set_secret`, `compute_delete_secret`, `compute_list_artifacts`, `compute_get_result`. **No `compute_run` or `compute_dry_run`** — a hosted server cannot read a caller's local files to build the upload. To launch or dry-run a job, use the local stdio server above.
+Full tool set: the same 19 tools as the local server plus `compute_report_issue` / `compute_get_report`. `compute_dry_run` and `compute_run` take the Python source **inline** instead of reading disk: `entrypoint` (`file.py::function`) plus `files`, an array of `{path, content}` holding the entrypoint and every local module it imports (at most 64 `.py` files, 2 MiB total). Third-party packages go in `pip`, not in `files`. `compute_dry_run` uploads nothing and creates no machine; `compute_run` still requires `confirm_spend=true` and spends prepaid credit.
 
 ## Credit
 
@@ -182,11 +182,15 @@ compute runs status <run_id>
 compute runs result <run_id>
 compute runs receipt <run_id>
 compute logs <run_id> -f
+compute artifacts list <run_id>
+compute artifacts get <run_id> <artifact_id> <version> --out ./weights
 compute cancel <run_id>
 compute machines
 ```
 
-MCP: `compute_list_runs`, `compute_get_run`, `compute_get_result`, `compute_get_receipt`, `compute_get_logs`, `compute_cancel_run`, `compute_list_machines`.
+MCP: `compute_list_runs`, `compute_get_run`, `compute_get_result`, `compute_get_receipt`, `compute_get_logs`, `compute_list_artifacts`, `compute_cancel_run`, `compute_list_machines`.
+
+Files the job writes under `$COMPUTE_ARTIFACT_DIR` with a `.compute-artifact.json` marker are uploaded to object storage before teardown. After the machine is gone, `compute artifacts get` is how the user retrieves them.
 
 `compute machines` / `compute_list_machines` should be empty after teardown. That is expected.
 
