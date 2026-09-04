@@ -1,26 +1,47 @@
 ---
 title: Support
-description: Send a run id and a request id. Do not paste tokens.
+description: File a durable report, follow replies, and check current service status.
 ---
+
+## Report a problem from the CLI
+
+Use a Compute report for a failed or stuck run, a billing question, or an unexpected CLI or MCP error. The report stays linked to your signed-in account, and adding a run id gives the operator the run's current status, provider, machine, and error context.
+
+```bash
+compute report "Run stayed in booting" \
+  --category boot_failed \
+  --run run_123 \
+  --details "Expected it to start around 14:20 UTC; request id req_123"
+```
+
+Replace the example ids with the values from your error. Available categories are `run_failed`, `boot_failed`, `billing`, `cli`, `mcp`, `docs`, and `other`. Run `compute report --help` for the optional `--error-code` and `--exit-code` fields. Use `--details -` to read longer details from standard input.
+
+The command prints a report id beginning with `rpt_`. Some known problems receive an automatic answer immediately. Otherwise, keep the id and check for an operator reply:
+
+```bash
+compute report status rpt_123
+```
+
+A report can be `open`, `answered`, or `closed`. Run the status command again later while it is open.
+
+## Report through an agent
+
+With either Compute MCP server connected, ask the agent to call `compute_report_issue` with a category, short summary, and the `run_id` when a run is involved. It should show you the returned `rpt_` id and any immediate response. Later, ask it to call `compute_get_report` with that id for the current status and operator reply.
+
+An agent using the CLI can run the same `compute report` and `compute report status` commands shown above.
+
+<Warning>
+Reports are stored and shown to operators, and GitHub issues are public. Never include `COMPUTE_API_KEY`, `config.toml`, session tokens, Checkout session ids, secret values, or signed upload and download URLs. The report API rejects several credential-shaped values, but it cannot replace checking the text before you send it.
+</Warning>
 
 ## What to include
 
-1. **Run id** — from `compute run` or `compute runs list`.
-2. **Request id** — from the API error body or `compute doctor --json`.
-3. What you ran (`file.py::fn`, `--gpu`, whether you used `--wait`).
-4. Approximate UTC time.
+1. **Run id** — from `compute run` or `compute runs list`. Pass it with `--run`.
+2. **Request id and error code** — from the API error body.
+3. **Command and expected result** — include the entrypoint, GPU selection, and what happened instead.
+4. **Approximate UTC time** — especially for intermittent failures.
 
-Do not paste `COMPUTE_API_KEY`, `config.toml`, or Checkout session ids.
-
-## Where to send it
-
-There is no public issue tracker and no `status.compute.cx` page yet. The dashboard is not a ticketing UI.
-
-Privacy, export, and deletion: **[privacy@theoric.com](mailto:privacy@theoric.com)** (same address as [Privacy](https://compute.cx/privacy)). Include your Compute user id (`usr_…`) when you have one.
-
-For a failed or stuck run, keep the run id and request id until there is a published operator contact. [Terms](https://compute.cx/terms) still tell you to include those ids.
-
-## Self-check before you write
+Before filing, these checks may narrow down the problem:
 
 ```bash
 compute doctor --json
@@ -28,8 +49,13 @@ compute runs status <run_id>
 compute machines
 ```
 
-If the run is terminal and `machines` is empty, teardown did its job even if the function failed. Send the run id anyway if the receipt looks wrong.
+If a run is terminal and `compute machines` is empty, teardown completed even when the function failed. File the report anyway if the result or receipt looks wrong.
 
-## Legal
+## Contact, public issues, and status
 
-[Terms](https://compute.cx/terms) and [Privacy](https://compute.cx/privacy) are on the product site. Treat them as drafts until the site says otherwise.
+- Email [harsh@theoric.com](mailto:harsh@theoric.com) for a direct question.
+- Use the [public GitHub issue tracker](https://github.com/theoriclabs/docs.compute.cx/issues) for documentation bugs and reproducible product issues that do not contain private account or run data.
+- Check [Compute system status](https://compute-cx.betteruptime.com/) for an active service incident.
+- For privacy, export, or deletion requests, email [privacy@theoric.com](mailto:privacy@theoric.com) and include your Compute user id (`usr_…`) when you have one.
+
+[Terms](https://compute.cx/terms) and [Privacy](https://compute.cx/privacy) are published on the product site.

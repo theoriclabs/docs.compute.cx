@@ -194,6 +194,11 @@ Files the job writes under `$COMPUTE_ARTIFACT_DIR` with a `.compute-artifact.jso
 
 `compute machines` / `compute_list_machines` should be empty after teardown. That is expected.
 
-## If create is refused
+## If Compute fails
 
-Keep the request id from the error body, `compute doctor --json`, or `compute_doctor`, plus the run id if one exists. Send those to the human; do not invent a status page. See [Support](https://docs.compute.cx/support).
+Keep the request id from the error body, `compute doctor --json`, or `compute_doctor`, plus the run id if one exists. When the user asks you to report the problem:
+
+- MCP: call `compute_report_issue` with the category, summary, `run_id` when available, error code, and command. Give the user the returned `rpt_` id and any immediate response. Follow it later with `compute_get_report`.
+- CLI: run `compute report "<summary>"` with the relevant flags, then `compute report status <report_id>`.
+
+Never put API keys, session tokens, `config.toml`, Checkout session ids, secret values, or signed URLs in a report. Check [Compute system status](https://compute-cx.betteruptime.com/) for an active incident. [Support](https://docs.compute.cx/support) lists contact and public issue routes.

@@ -31,7 +31,7 @@ That is enough for Cursor, Claude Code, Codex, and similar tools that can fetch 
 
 ## MCP
 
-After the CLI is installed, agents can call Compute as tools instead of shelling out. Cloud/hosted agents that cannot spawn a local process can instead reach `https://mcp.compute.cx/mcp` over Streamable HTTP with Clerk OAuth — read/management tools only, no `compute_run`/`compute_dry_run`. See [MCP server](/get-started/mcp) for both.
+After the CLI is installed, agents can call Compute as tools instead of shelling out. Cloud or hosted agents that cannot spawn a local process can instead reach `https://mcp.compute.cx/mcp` over Streamable HTTP with Clerk OAuth. Both servers can dry-run and submit work; the hosted server accepts the Python source inline. See [MCP server](/get-started/mcp) for both.
 
 ```json
 {
@@ -52,9 +52,10 @@ This repository also ships as an Agent Plugin (`plugin.json` + `skills/compute/S
 2. Writes the tested `simple_mlp.py` example from [First run](/get-started/first-run).
 3. Runs `compute run simple_mlp.py::train --gpu H100-SXM --dry-run` (no machine), or MCP `compute_dry_run`.
 4. On your confirmation, submits with `--wait --yes` or `compute_run` + `confirm_spend=true` and checks teardown via `compute machines`.
+5. When you ask it to report an unexpected failure, calls `compute_report_issue`, gives you the returned `rpt_` id, and follows replies with `compute_get_report`. The CLI equivalents are `compute report` and `compute report status`.
 
-Do not paste API keys, `config.toml`, or Checkout session ids into the agent chat.
+Do not paste API keys, session tokens, `config.toml`, Checkout session ids, secret values, or signed URLs into the agent chat or a report.
 
 ## Next
 
-[MCP server](/get-started/mcp) is the tool surface. [First run](/get-started/first-run) is the same example, written for a human. [Run](/cli/run) is the flag reference.
+[MCP server](/get-started/mcp) is the tool surface. [First run](/get-started/first-run) is the same example, written for a human. [Support](/support) explains reports, follow-up, contact, and system status. [Run](/cli/run) is the flag reference.

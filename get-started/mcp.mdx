@@ -56,8 +56,9 @@ Cursor install link (CLI must already be on `PATH`):
 | `compute_get_run` / `compute_get_logs` / `compute_get_receipt` | No | Inspect |
 | `compute_cancel_run` | No | Idempotent teardown |
 | `compute_list_secrets` / `compute_set_secret` | No | Values are never returned |
+| `compute_report_issue` / `compute_get_report` | No | File a durable report and read its status or reply |
 
-Do not paste API keys, `config.toml`, Checkout session ids, or secret values into the agent chat.
+Do not paste API keys, session tokens, `config.toml`, Checkout session ids, secret values, or signed URLs into the agent chat or a report.
 
 ## Hosted (Streamable HTTP)
 
@@ -77,7 +78,7 @@ curl https://mcp.compute.cx/.well-known/oauth-protected-resource/mcp
 Dynamic Client Registration is enabled. The authorization server at `https://clerk.compute.cx` publishes a `registration_endpoint`, so an MCP host self-registers its client and completes the browser consent; nothing has to be pre-registered. The consent signs in the Compute account whose prepaid credit the runs will spend.
 </Note>
 
-The hosted server exposes the full tool set: the 19 tools above plus `compute_report_issue` and `compute_get_report`. The difference is the input of `compute_dry_run` and `compute_run`: instead of a `project_root`, they take the Python source inline as `files`, an array of `{path, content}` holding the entrypoint and every local module it imports (at most 64 `.py` files, 2 MiB total); third-party packages go in `pip`. The API plans the import closure from those files, so the hosted server never needs the calling agent's disk. `compute_run` still requires `confirm_spend=true`.
+Both servers expose the full set of 21 tools, including `compute_report_issue` and `compute_get_report`. The hosted server differs in the input of `compute_dry_run` and `compute_run`: instead of a `project_root`, they take the Python source inline as `files`, an array of `{path, content}` holding the entrypoint and every local module it imports (at most 64 `.py` files, 2 MiB total); third-party packages go in `pip`. The API plans the import closure from those files, so the hosted server never needs the calling agent's disk. `compute_run` still requires `confirm_spend=true`.
 
 ## Plugin (skill + MCP)
 
