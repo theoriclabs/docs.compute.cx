@@ -157,7 +157,7 @@ compute run simple_mlp.py::train --gpu H100-SXM --dry-run
 
 MCP: `compute_dry_run` with `entrypoint=simple_mlp.py::train` and `gpu=H100-SXM`.
 
-NVIDIA image: `compute.Image.cuda_pytorch()`. AMD / MI300X: `compute.Image.rocm_pytorch()`. Mixing them is a failed run. Both curated images install a pinned torch at run start (`torch==2.5.1+cu124` on CUDA, `torch==2.7.1+rocm6.3` on ROCm) unless the image's `pip_install(...)` names a `torch*` package, in which case your pin wins. Expect the install to add a minute or more of boot time.
+NVIDIA image: `compute.Image.cuda_pytorch()`. AMD / MI300X: `compute.Image.rocm_pytorch()`. Mixing them is a failed run. Both curated images install a pinned torch at run start (`torch==2.5.1+cu124` plus `numpy` on CUDA, `torch==2.7.1+rocm6.3` plus `numpy` on ROCm) unless the image's `pip_install(...)` names a `torch*` package, in which case your pin wins. Expect the install to add a minute or more of boot time.
 
 When the user has credit and wants a real run:
 
