@@ -1,6 +1,6 @@
 ---
 title: GPU list
-description: Locked public SKUs and list rates. Reserved H100, AMD MI300X, and Vast.ai interruptible cards.
+description: Locked public SKUs and list rates. Reserved RunPod H100/A100/H200, AMD MI300X, and Vast.ai interruptible cards.
 ---
 
 ```bash
@@ -15,6 +15,10 @@ That output is the source of truth for names and **list ¢/hr**. Marketing pages
 | Name | Also accepted | Provider | Role |
 |---|---|---|---|
 | `H100-SXM` | `H100`, `H100-80GB` | RunPod Secure | Reserved public lead |
+| `A100-PCIe-80GB` | — | RunPod Secure | Reserved; used by published training posts |
+| `A100-SXM-80GB` | — | RunPod Secure | Reserved |
+| `H100-PCIe` | — | RunPod Secure | Reserved |
+| `H200` | — | RunPod Secure | Reserved, 141 GB |
 | `MI300X` | — | Hot Aisle | AMD; stock can be tight |
 | `RTX-3090` | `3090`, `RTX3090` | Vast.ai interruptible | Lowest locked rate, 24 GB |
 | `RTX-4090` | `4090`, `RTX4090` | Vast.ai interruptible | Common 24 GB training card |
@@ -25,7 +29,7 @@ That output is the source of truth for names and **list ¢/hr**. Marketing pages
 | `A100-80GB` | `A100-80` | Vast.ai interruptible | 80 GB datacenter |
 | `H100-SXM` | — | Vast.ai interruptible | Same name as RunPod; qualify it |
 
-`H100-SXM` exists on both RunPod and Vast.ai. A bare `--gpu H100-SXM` is ambiguous — use `--provider runpod` or `--provider vastai`, or write `vastai/H100-SXM`.
+`H100-SXM` exists on both RunPod and Vast.ai. A bare `--gpu H100-SXM` is ambiguous — use `--provider runpod` or `--provider vastai`, or write `vastai/H100-SXM`. Bare `A100-80GB` is Vast interruptible; reserved RunPod cards are `A100-PCIe-80GB` and `A100-SXM-80GB`.
 
 Vast.ai SKUs are **interruptible**. The host can reclaim the machine. Compute then ends the run and confirms teardown so you are not left paying for a paused box.
 
