@@ -34,13 +34,14 @@ The three-command funnel (install → setup → run) also lives on [compute.cx/q
 | Sign-in + `compute setup` | Live |
 | Prepaid credits | Live — $10 minimum |
 | RunPod Secure **H100-SXM** | Reserved public lead |
+| RunPod Secure A100 / H100-PCIe / H200 | Reserved; use `runpod/A100-PCIe-80GB`, `runpod/A100-SXM-80GB`, `runpod/H100-PCIe`, or `runpod/H200` |
 | Hot Aisle **MI300X** | Available, stock can be tight |
 | Vast.ai spot | RTX 3090 / 4090 / 5090, L4, A100, H100 — host can reclaim. Public list: [compute.cx/gpus](https://compute.cx/gpus) |
 | Tinker-compatible training API | Private alpha — CLI shipped; public session quotes remain closed until provider canaries pass |
 | Cancel + teardown | Live |
 | Dashboard | Observe keys, credits, runs — **not** the launcher |
 
-Compute is in early access. One active run per account and spend or create-rate limits may refuse a run; provider capacity is not guaranteed. Different accounts are not serialized by a Compute-wide machine slot.
+Compute is in early access. Up to two active runs per account; spend limits and provider capacity may refuse a run. There is no hourly create-rate cap. Different accounts are not serialized by a Compute-wide machine slot.
 
 <Card title="Tinker-compatible training API" href="/tinker" icon="flask" horizontal>
   Fine-tune Qwen3-4B with the official Tinker SDK on a dedicated H100 or MI300X. The private-alpha guide covers the one-command lifecycle, safety caps, and checkpoint harvest.
