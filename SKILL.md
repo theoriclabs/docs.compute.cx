@@ -28,7 +28,7 @@ MCP (stdio): `compute mcp` after the CLI is installed and signed in. MCP (hosted
 - Do not paste `COMPUTE_API_KEY`, `~/.compute/config.toml`, Checkout session ids, or secret values into chat logs.
 - Do not use `pip install compute`. v0.1 install is `curl|sh` only.
 - Live SKUs come from `compute gpu list`, MCP `compute_list_gpus`, and https://compute.cx/gpus. Do not pass a name that list does not show. `--gpu` may be a SKU, `PROVIDER/SKU`, or a policy: `auto`, `fast`, `cheap` (`fastest` / `cheapest` also accepted). Policies pick from the live catalog — confirm the quoted SKU and rate before spend. Public reserved lead is **H100-SXM** (`H100` and `H100-80GB` are aliases). **MI300X** is AMD. Vast.ai spot SKUs include **RTX-3090**, **RTX-4090**, **RTX-5090**, **L4**, **A100-40GB**, **A100-80GB**, and **H100-SXM** — pass `--provider vastai` or `vastai/<SKU>`. Spot capacity can be reclaimed; Compute then ends the run and tears the machine down. Do not invent a $/hr number; use `compute gpu list` or `compute_list_gpus`.
-- One active run per account. Spend, create-rate, and provider capacity can refuse a create even with a positive balance.
+- Two active runs per account on the public admission cap. Spend, create-rate, and provider capacity can refuse a create even with a positive balance. `--gpu cheap` is an alias of `cheapest`; if Clockworks cannot score the workload it will not silently pick a GPU — it either fails or, with `--allow-selector-fallback`, quotes the decorator SKU (a decorator fallback, not a scored cheapest pick).
 
 ## Install and sign in
 

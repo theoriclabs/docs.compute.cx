@@ -13,7 +13,7 @@ Example ([source](/get-started/first-run)):
 compute run simple_mlp.py::train --gpu H100-SXM --wait --yes
 ```
 
-Pass a GPU SKU to pin the machine, or pass `auto`, `fastest`, or `cheapest` to route the workload. `--yes` skips the interactive spend confirmation.
+Pass a GPU SKU to pin the machine, or pass `auto`, `fastest`, or `cheapest` to route the workload. `cheap` is an alias of `cheapest`; `fast` is an alias of `fastest`. `--yes` skips the interactive spend confirmation.
 
 ## Automatic routing
 
@@ -21,19 +21,20 @@ Pass a GPU SKU to pin the machine, or pass `auto`, `fastest`, or `cheapest` to r
 compute run simple_mlp.py::train --gpu auto
 compute run simple_mlp.py::train --gpu fastest
 compute run simple_mlp.py::train --gpu cheapest
+compute run simple_mlp.py::train --gpu cheap
 ```
 
 | Policy | Selection objective |
 |---|---|
 | `auto` | Balance predicted execution time and provider cost by minimizing the worst relative tradeoff. |
-| `fastest` | Choose the compatible candidate with the lowest predicted execution time. |
-| `cheapest` | Choose the compatible candidate with the lowest predicted provider execution cost. |
+| `fastest` (`fast`) | Choose the compatible candidate with the lowest predicted execution time. |
+| `cheapest` (`cheap`) | Choose the compatible candidate with the lowest predicted provider execution cost. |
 
 For a policy run, the CLI packages and uploads the source closure and attaches a typed Torch graph when it can capture one. Compute analyzes the workload, filters out incompatible candidates, and scores each remaining provider/GPU pair against a target-specific hardware profile.
 
 The preflight quote shows the selected provider and GPU, locked rate, execution estimate, analysis warnings, and projected billed total. The CLI creates no run until you approve that quote or pass `--yes`.
 
-Routing uses execution time and provider execution cost. Queue and machine startup time are not part of the current score. If the analysis cannot establish facts such as accelerator compatibility or a safe memory bound, Compute returns an analysis error instead of guessing. If the API marks a quote as a selector fallback, the CLI refuses it unless you pass `--allow-selector-fallback`.
+Routing uses execution time and provider execution cost. Queue and machine startup time are not part of the current score. If the analysis cannot establish facts such as accelerator compatibility or a safe memory bound, Compute returns `workload_estimate_unsupported` instead of guessing. That is **not** a scored `cheapest` pick. A `--gpu cheap` call that cannot be estimated will not silently pin the decorator SKU: it either fails, or — only with `--allow-selector-fallback` — requotes the GPU declared on `@app.function` and labels that quote a decorator fallback. If the API marks a quote as a selector fallback, the CLI also refuses it unless you pass `--allow-selector-fallback`. `--yes` does not accept either fallback.
 
 Automatic routing is opt-in. With no `--gpu`, Compute uses the decorator's GPU selection or defaults to `hotaisle/MI300X`.
 
@@ -41,10 +42,10 @@ Automatic routing is opt-in. With no `--gpu`, Compute uses the decorator's GPU s
 
 | Flag | Meaning |
 |---|---|
-| `--gpu` | GPU SKU, `PROVIDER/SKU`, or policy: `auto`, `fastest`, `cheapest`. |
+| `--gpu` | GPU SKU, `PROVIDER/SKU`, or policy: `auto`, `fast`/`fastest`, `cheap`/`cheapest`. |
 | `--provider` | Pin a SKU or scope a policy to `runpod`, `hotaisle`, or `vastai`. Required when a SKU name exists on more than one provider. |
 | `--allow-selector-fallback` | Accept a quote that the selector marks as a fallback. |
-| `--wait` | Stream until terminal; print JSON result. Default is detach after create. |
+| `--wait` | Stream until terminal; print JSON result. Default is detach after create. A dropped SSE chunk reconnects with `Last-Event-ID`; it does not fail the run. If follow cannot resume, the CLI prints the run id and says the job is still live. |
 | `--timeout` | Function timeout in seconds. Default **600** (10 minutes). |
 | `--args` | JSON object for function kwargs. |
 | `--dry-run` | Print the local source and upload plan. No upload, remote analysis, quote, or machine. |
