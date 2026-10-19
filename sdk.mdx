@@ -32,10 +32,37 @@ compute run simple_mlp.py::train --gpu H100-SXM --wait --yes
 | `compute.Image.cuda_pytorch()` | NVIDIA image (RunPod H100 and Vast.ai CUDA SKUs). Installs `torch==2.5.1+cu124` and `numpy` at run start unless you pin a `torch*` package. |
 | `compute.Image.rocm_pytorch()` | AMD / MI300X image. Installs `torch==2.7.1+rocm6.3` and `numpy` at run start unless you pin a `torch*` package. |
 | `Image.<curated>().pip_install(...)` | Extra pip packages on that image. |
-| `@app.function(...)` | Marks the entrypoint. `gpu`, `image`, `timeout`. |
+| `@app.function(...)` | Marks the entrypoint. `gpu`, `image`, `timeout`, `include`. |
 | `fn.remote(**kwargs)` | In-script call shape. Args and return must be JSON. |
 
 Put GPU-only imports **inside** the function so local dry-runs and packaging stay honest.
+
+## Non-Python files
+
+The upload is the entrypoint plus the local Python modules it imports. Any other file (data, a config, a Lean/Lake or C project the function builds and runs) ships only when the decorator names it in `include` (CLI 0.1.21+):
+
+```python
+import subprocess
+
+import compute
+
+app = compute.App("ptx-check")
+
+
+@app.function(
+    gpu="vastai/A100-80GB",
+    image=compute.Image.cuda_pytorch().pip_install("nvidia-cuda-nvcc-cu12==12.4.131"),
+    include=["lakefile.lean", "lean-toolchain", "Main.lean", "PtxCheck"],
+)
+def check() -> int:
+    return subprocess.run(["lake", "exe", "ptxcheck"]).returncode
+```
+
+- Paths are relative to the project root: the entrypoint's directory, or `--project-root`. `include=["."]` ships the whole directory.
+- A directory is walked recursively. Inside it, names that start with `.` (`.git`, `.lake`, `.venv`) and `__pycache__` are skipped. Name a dot file explicitly to ship it.
+- Files land at the same relative paths in the run's working directory. Symlinks are refused. Executable bits are not kept.
+- `--dry-run` lists every file that will ship. The whole upload is capped at 32 MiB compressed, 64 MiB uncompressed and 10,000 files.
+- The entrypoint is still a Python function. Toolchains are not preinstalled, so install them at run time. `ptxas` comes from the pip package above, at `site-packages/nvidia/cuda_nvcc/bin/ptxas` (it is not on `PATH`). Lean comes from elan; set `ELAN_HOME` under the working directory, because `$HOME` may be read-only.
 
 ## Not in this manual
 
