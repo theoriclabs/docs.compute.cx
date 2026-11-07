@@ -1,0 +1,50 @@
+---
+title: Run a shell command
+description: Upload a project, run a command on a GPU, and retrieve changed files.
+---
+
+`compute exec` (CLI 0.1.22+) runs a shell command, streams output, retrieves
+files the command created or changed, and exits with the command's exit code.
+
+## Fresh NVIDIA GPU
+
+```bash
+compute exec --gpu runpod/A100-PCIe-80GB 'nvcc --version && nvidia-smi'
+```
+
+Cold exec uses `compute-cuda-devel`, with the CUDA 12.4 toolkit (`nvcc`,
+`ptxas`, `cuobjdump`, `nvdisasm`, `cuda-gdb`, `compute-sanitizer`). It does
+not pin torch. This container image runs on RunPod and Vast.ai. The API
+refuses an unavailable toolkit image or an incompatible provider before
+a credit hold. GPU policies and AMD SKUs are unsupported for cold exec.
+
+Each cold invocation includes a new boot, so chain related steps with `&&`.
+The quote needs confirmation; `--yes` skips that prompt and spends credit.
+
+## Held machine
+
+```bash
+compute exec --machine m_... 'nvidia-smi'
+```
+
+This uses the [held machine](/cli/machines)'s image and avoids another boot.
+The toolkit exists only if that machine was created with `--image compute-cuda-devel`.
+Jobs have no separate hold or usage charge; the machine continues billing
+between jobs until it stops.
+
+## Project and file handling
+
+The project root is `--project-root`, otherwise the git work tree root, or
+the current directory outside git. Uploads honor `.gitignore` and
+`.computeignore`, skip dot entries, and refuse symlinks. The command runs
+in the corresponding project subdirectory under `bash -c`; stdin is not
+forwarded. Quote pipelines so the shell runs them remotely.
+
+Changed files return at the same relative paths, up to 50 MB. Files you
+edited locally during execution are kept, with a command to download the
+remote copy through artifacts. Deletions are not mirrored. `--no-pull`
+leaves output in the run's `exec-output` artifact.
+
+Program stdout remains stdout; CLI progress goes to stderr. `--json` emits
+machine-readable output. Ctrl+C cancels the job and exits 130. Use
+`compute exec --help` for the installed flags.

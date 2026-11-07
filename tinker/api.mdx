@@ -65,7 +65,7 @@ Do not use your normal Compute API token as `TINKER_API_KEY`. Do not copy an on-
 
 A Tinker session is billed while its GPU machine exists, in started minutes plus the platform fee shown by the quote. It is not billed at hosted Tinker token prices.
 
-CLI-owned `run` and `shell` sessions stop when the child exits. User-owned `start` sessions continue until you stop them or a safety control fires. One account can have one live Tinker session.
+CLI-owned `run` and `shell` sessions stop when the child exits. User-owned `start` sessions continue until you stop them or a safety control fires. One account can have several live Tinker sessions; each has its own credentials, billing and stop limits.
 
 ## Checkpoints
 

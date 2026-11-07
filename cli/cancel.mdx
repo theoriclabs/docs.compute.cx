@@ -8,7 +8,7 @@ compute cancel <run_id>
 compute machines
 ```
 
-Cancel asks the control plane to stop the run and terminate the machine. `compute machines` should be empty after teardown.
+For a cold run, cancel asks the control plane to stop the run and terminate its machine. Verify that specific machine disappears from `compute machines`; other live machines may remain. Cancelling a held-machine job cancels the job through the agent. Use `compute machines rm ID` to stop the held machine and end its billing.
 
 Teardown is part of the product. If a run is still listed as active and `machines` is not empty, keep the run id and [contact support](/support).
 

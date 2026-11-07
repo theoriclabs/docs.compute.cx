@@ -5,7 +5,7 @@ description: One CLI. A fresh GPU machine per run. Prepaid credit, billed while 
 
 Compute runs a Python function on a newly provisioned cloud GPU, streams output to your terminal, returns JSON, and confirms the machine is gone.
 
-You do not manage images, keep-alive pools, or a login to the box. The machine exists for one run.
+Cold runs terminate their machine when finished. To reuse a GPU for sequential jobs, explicitly create a [held machine](/cli/machines); it bills while up, including idle minutes. [compute exec](/cli/exec) runs shell commands and retrieves changed project files without a machine login.
 
 ## What you do
 
@@ -40,7 +40,7 @@ The three-command funnel (install → setup → run) also lives on [compute.cx/q
 | Cancel + teardown | Live |
 | Dashboard | Observe keys, credits, runs — **not** the launcher |
 
-Compute is in early access. Up to two active runs per account and spend limits may refuse a run; provider capacity is not guaranteed. Different accounts are not serialized by a Compute-wide machine slot.
+Compute is in early access. There is no per-account run or machine cap. Prepaid credit, holds and spend limits can refuse new work; provider capacity is not guaranteed. Different accounts are not serialized by a Compute-wide machine slot.
 
 <Card title="Tinker-compatible training API" href="/tinker" icon="flask" horizontal>
   Fine-tune Qwen3-4B with the official Tinker SDK on a dedicated H100 or MI300X. The private-alpha guide covers the one-command lifecycle, safety caps, and checkpoint harvest.

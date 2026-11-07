@@ -22,7 +22,7 @@ This repo is also the public **Agent Plugin** (`plugin.json`, `mcp.json`, `skill
 
 ## What belongs here
 
-Honest CLI / SDK pages that match live behavior: install via `curl|sh`, `compute setup`, prepaid credits, `run` / logs / cancel, reserved H100-SXM, MI300X, Vast.ai interruptible SKUs, billing rules without inventing a fee percentage. Workload pages under `guides/` must include the `file.py::function` source they tell people to run. Keep `SKILL.md` identical to `skills/compute/SKILL.md`.
+Honest CLI / SDK pages that match live behavior: install via `curl|sh`, `compute setup`, prepaid credits, cold and held-machine runs, `exec` / logs / cancel, reserved H100-SXM, MI300X, Vast.ai interruptible SKUs, billing rules without inventing a fee percentage. Workload pages under `guides/` must include the `file.py::function` source they tell people to run. Keep `SKILL.md` identical to `skills/compute/SKILL.md`.
 
 Do not add internal design docs, OpenAPI playgrounds, or unshipped surfaces (PyPI, persistent disks, RunPod Community).
 

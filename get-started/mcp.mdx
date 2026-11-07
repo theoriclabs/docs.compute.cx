@@ -8,7 +8,7 @@ Compute has two [MCP](https://modelcontextprotocol.io) servers: a **local stdio*
 The Agent Skill at [https://compute.cx/SKILL.md](https://compute.cx/SKILL.md) is the workflow. MCP is the tool surface.
 
 <Warning>
-`compute_run` spends prepaid credit. It requires `confirm_spend=true`. `compute_dry_run` prints the upload plan and creates **no** machine.
+`compute_run` spends prepaid credit. Cold launches require `confirm_spend=true`; creating a held machine also requires it. Jobs on a ready held machine have no separate hold or charge. `compute_dry_run` creates **no** machine; the hosted version stores source and returns a prepared launch.
 </Warning>
 
 ## Install the CLI
@@ -52,7 +52,10 @@ Cursor install link (CLI must already be on `PATH`):
 | `compute_list_gpus` | No | Live SKUs — do not invent names |
 | `compute_credits` / `compute_credits_add` | Checkout only | Top-up minimum $10; credit lands after the webhook |
 | `compute_dry_run` | No | AST plan only; no upload |
-| `compute_run` | Yes | Requires `confirm_spend=true` |
+| `compute_run` | Cold launches | Requires `confirm_spend=true` for cold work; accepts `machine_id` for held jobs |
+| `compute_create_machine` | Yes | Requires `confirm_spend=true`; returns before ready |
+| `compute_get_machine` / `compute_list_machines` | No | Poll readiness and inspect machines |
+| `compute_delete_machine` | Stops billing after teardown | Stops a held machine |
 | `compute_get_run` / `compute_get_logs` / `compute_get_receipt` | No | Inspect |
 | `compute_cancel_run` | No | Idempotent teardown |
 | `compute_list_secrets` / `compute_set_secret` | No | Values are never returned |
@@ -78,7 +81,38 @@ curl https://mcp.compute.cx/.well-known/oauth-protected-resource/mcp
 Dynamic Client Registration is enabled. The authorization server at `https://clerk.compute.cx` publishes a `registration_endpoint`, so an MCP host self-registers its client and completes the browser consent; nothing has to be pre-registered. The consent signs in the Compute account whose prepaid credit the runs will spend.
 </Note>
 
-Both servers expose the full set of 21 tools, including `compute_report_issue` and `compute_get_report`. The hosted server differs in the input of `compute_dry_run` and `compute_run`: instead of a `project_root`, they take the Python source inline as `files`, an array of `{path, content}` holding the entrypoint and every local module it imports (at most 64 `.py` files, 2 MiB total); third-party packages go in `pip`. The API plans the import closure from those files, so the hosted server never needs the calling agent's disk. `compute_run` still requires `confirm_spend=true`.
+The shared catalog contains 34 tools. Hosted MCP exposes 36 tools; local
+MCP exposes 37, including `compute_doctor`. Both include held machines,
+model deployment planning and control, budgets, artifacts, reports, and run
+inspection.
+
+Hosted `compute_dry_run` takes `entrypoint` plus inline `files` (`{path,
+content}`): the entrypoint, imported local modules, and any non-Python files
+declared in the decorator's `include`. Limits are 64 files and 2 MiB of UTF-8
+text. Put third-party packages in `pip`. The tool stores source, creates a
+quote, and returns `prepared_run`, with no run or machine and no execution
+charge. Pass that object unchanged to `compute_run` with `confirm_spend=true`.
+If the quote has `fallback=true`, separately approve it with top-level
+`accept_selector_fallback=true`; spend confirmation alone does not approve it.
+Poll run state and logs after launch.
+
+## Held machines
+
+1. Review `compute_list_gpus` and call `compute_create_machine` with `gpu_sku`
+   and `confirm_spend=true`. Optional limits are `idle_timeout_seconds` and
+   `max_lifetime_seconds`. It returns immediately.
+2. Poll `compute_get_machine` until ready.
+3. Local MCP: call `compute_run` with `entrypoint` and `machine_id`.
+   Hosted MCP: call `compute_dry_run` with inline `files` and `machine_id`,
+   then `compute_run` with the returned `prepared_run` unchanged. Create a new
+   dry run for each new hosted job.
+4. Call `compute_delete_machine` when finished.
+
+Held jobs have no quote or separate credit hold and need no `confirm_spend`.
+The machine owner run bills uptime, including idle minutes, until it stops.
+`machine_not_ready` means poll readiness; `machine_busy` means inspect the
+current job; `machine_unavailable` means the machine has stopped. See
+[held-machine billing and limits](/cli/machines).
 
 ## Plugin (skill + MCP)
 

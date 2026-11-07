@@ -77,6 +77,8 @@
         "group": "CLI",
         "pages": [
           "cli/run",
+          "cli/exec",
+          "cli/machines",
           "cli/gpus",
           "cli/credits",
           "cli/logs",

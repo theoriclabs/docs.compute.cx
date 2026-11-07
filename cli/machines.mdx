@@ -1,0 +1,50 @@
+---
+title: Held machines
+description: Keep a GPU ready for sequential jobs, with explicit idle and lifetime limits.
+---
+
+With CLI 0.1.22 or newer, a held machine stays up between jobs. You pay for its
+uptime, including idle minutes. Each machine runs one job at a time; accounts
+can hold several machines concurrently.
+
+## Create and use a machine
+
+```bash
+compute gpu list
+compute machines create --gpu runpod/H100-SXM --idle 10m --max-lifetime 8h
+```
+
+Review the rate and limits before confirming. Creation holds credit for the
+whole lifetime and waits until the machine is ready. `--no-wait` returns
+immediately; inspect it with `compute machines` before sending a job.
+
+Use the returned `m_...` ID:
+
+```bash
+compute run simple_mlp.py::train --machine m_... --wait
+compute exec --machine m_... 'nvidia-smi'
+compute machines rm m_...
+```
+
+Save `simple_mlp.py` from [First run](/get-started/first-run) first.
+`COMPUTE_MACHINE` supplies the default machine ID for `run` and `exec`.
+An explicit `--machine` wins. Jobs use the machine's image; they create no
+new quote or credit hold and have no separate usage charge. A busy machine
+refuses another job with `machine_busy`. A different requested image gives
+`image_mismatch`; a stopped machine gives `machine_unavailable`.
+
+Each job has a fresh working directory. Machine scratch storage and cross-job
+virtual environment reuse are planned. Save files through artifacts or use
+[exec's file retrieval](/cli/exec).
+
+## Billing and automatic stops
+
+The `machine_hold` owner run bills the machine, including idle time. Boot
+minutes are charged only if it reaches ready. Defaults are 10 idle minutes
+and 8 hours after readiness; maximum lifetime is 24 hours. Removal, the
+$0.50 balance floor, or lost heartbeat also stop it.
+
+Finishing or cancelling a job leaves the held machine under its own lifecycle.
+Use `compute machines rm ID` when you have finished with the GPU, and verify
+that specific machine disappears from `compute machines`. Other machines may
+still be running. See [Billing](/billing) and [MCP](/get-started/mcp#held-machines).

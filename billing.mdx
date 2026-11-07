@@ -10,7 +10,7 @@ Compute is **prepaid**. You add credit, then runs hold and burn that balance.
 - Minimum Checkout: **$10** (`compute credits add 10`).
 - You are billed **started minutes** while the provider machine exists, rounded up.
 - A **failed boot** that never starts the machine is **$0**.
-- When the run ends (success, error, cancel, timeout), Compute terminates the machine and writes a receipt.
+- When a cold run ends (success, error, cancel, timeout), Compute terminates its machine and writes a receipt. Jobs on a held machine leave the machine up under its own lifecycle.
 - One receipt line is provider usage. Another is the **platform fee**.
 
 ```bash
@@ -25,9 +25,17 @@ List rates (¢/hr) come from `compute gpu list`. Interruptible Vast.ai SKUs use 
 
 The platform fee percentage is published on [Pricing](https://compute.cx/pricing). This manual does **not** restate a number so it cannot drift from the site or the biller.
 
+## Held machines
+
+A [held machine](/cli/machines) holds credit for its whole lifetime. Its
+`machine_hold` owner run bills started minutes while the machine is up,
+including idle time; jobs on it have no separate hold or usage charge.
+Boot minutes are charged only if it reaches ready. Stop it with
+`compute machines rm ID` when you finish, or let its idle/lifetime limits stop it.
+
 ## Caps
 
-Per-account spend and two-active-runs limits can refuse a create even when `compute credits` is positive. Provider availability can also prevent a run. The API error includes a request id — keep it for [Support](/support).
+Spend limits and credit already held by other work can refuse a create even when `compute credits` is positive. There is no per-account concurrency cap. Provider availability can also prevent a run. The API error includes a request id — keep it for [Support](/support).
 
 ## Dashboard
 
