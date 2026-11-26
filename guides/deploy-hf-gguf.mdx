@@ -1,0 +1,132 @@
+---
+title: Deploy a Hugging Face GGUF model
+description: Turn a GGUF repository on Hugging Face into a private, authenticated endpoint on a cloud GPU, from the dashboard at /deployments/new.
+---
+
+Use this when you want an always-on chat endpoint for a GGUF model. Compute serves GGUF files with llama.cpp. Safetensors repositories use a different engine (vLLM) and are not covered here.
+
+This is not a `compute run`. A deployment is a model endpoint that stays up until you stop it, an idle limit stops it, or a spend limit stops it.
+
+Need credit first? [Add credit](/cli/credits), then open [`/deployments/new`](https://compute.cx/deployments/new) in the dashboard.
+
+## Paste the model
+
+In the model field, enter either an `owner/model` repo id or a full `https://huggingface.co/...` URL. For example, `Qwen/Qwen2.5-7B-Instruct-GGUF` (an example id; use the repository you want).
+
+These URL forms are accepted:
+
+| Form | Effect |
+| --- | --- |
+| `https://huggingface.co/owner/model` | Repository on the `main` revision. |
+| `.../tree/<revision>` | Pins that branch, tag or commit. |
+| `.../blob/<revision>/<file>.gguf` or `.../resolve/<revision>/<file>.gguf` | Pins the revision and selects that file. |
+| `https://huggingface.co/owner/model?file=<file>.gguf` | Selects that file. |
+| `https://huggingface.co/owner/model?revision=<revision>` | Pins the revision. |
+
+Only `https://huggingface.co` URLs are accepted. Query parameters other than `file`, `revision` and `download` are rejected. If a URL names a revision or file that conflicts with another selection you made, inspection fails instead of choosing one.
+
+Compute resolves the revision to a 40-character commit before it plans anything, so the deployment is pinned to that commit even if you gave a branch name. Inspection reads Hub metadata only; it does not download the weights.
+
+## Choose a variant
+
+If the repository has more than one GGUF file, Compute stops with **Choose a model variant** and lists each file with its size. Pick one. You can skip this step by pasting a `blob` link or `?file=` URL for the file you want.
+
+A few files are never treated as the model itself:
+
+- Vision projector files (names starting with `mmproj`) are companion files.
+- MTP companion files are files whose name contains `mtp-support` or `mtp_support`, or whose name has a standalone `mtp` part and is under one tenth the size of the largest GGUF in the repo.
+
+Companion files are left out of the variant list. If you select one directly, Compute refuses with "select the main model GGUF". They are not downloaded.
+
+Split GGUFs named like `name-00001-of-00003.gguf` are treated as one set. Selecting any shard selects the whole set. If a shard is missing, Compute reports that the GGUF shard set is incomplete.
+
+## Text only by default
+
+Compute's llama.cpp deployment does not load a vision projector. If a GGUF repo declares no task, or declares `image-text-to-text`, Compute deploys it as text-only chat and says so in a warning. Image input is not served.
+
+To override the detected task, open **Task selection** and pick a task. Choosing `image-text-to-text` explicitly keeps that task, but the warning stays: GGUF image input needs a vision projector, which is not loaded. For text-only use of a multimodal model, choose `text-generation`.
+
+## Gated and private models
+
+If Hugging Face refuses access (401 or 403), the page shows **This model needs access**. For a gated model, request access from the publisher first. Then:
+
+1. Choose **Add a credential**.
+2. Enter a credential name (letters, digits and underscores, starting with a letter or underscore, up to 128 characters) and a Hugging Face access token.
+3. Choose **Save credential and recheck**.
+
+Use a read token. The saved credential is then selectable under **Saved Hugging Face credential**, and the model is rechecked with it.
+
+## Choose a machine
+
+After inspection, Compute fetches live quotes for machines that can run the model. The suggested machine is shown first, with its hourly rate. Open the machine list to pick another. Quotes expire after 600 seconds; refresh them if the page says the quote expired.
+
+Each machine carries a memory-fit label:
+
+- **Estimated fit**: the modeled memory use is within the GPU budget.
+- **Memory risk**: the model may run out of memory with your settings. Lower the context or concurrency, or pick a larger machine.
+- **Estimate unavailable**: the file size or attention layout is not known, so no estimate is made.
+
+A machine whose GPU memory cannot hold the weights is left out of the list.
+
+The default settings for a GGUF are a context of 32,768 tokens (or the model's native context if smaller; 8,192 if the native context is unknown), 4 concurrent requests, and a maximum output of half the context up to 8,192 tokens. If that does not fit a machine, the recommendation steps the context down (16,384, 8,192, 4,096, 2,048, 1,024) and the concurrency down (4, 2, 1). You can edit these settings before you deploy.
+
+### Sizing rule of thumb
+
+Compute estimates per-GPU memory as:
+
+```text
+weights + KV cache + workspace + loading reserve
+```
+
+- Weights: the GGUF file size. Shards are summed.
+- KV cache: `2 x layers x KV heads x head dim x context x concurrent requests x bytes per value`. The bytes per value is 2 for the default fp16 cache. Context and concurrency multiply, so halving either halves the KV cache.
+- Workspace: a fixed amount per machine type, set by Compute.
+- Loading reserve: the larger of 0.5 GiB and 10 percent of the weights.
+
+The total is compared with 90 percent of the GPU's memory. As a quick check, the GGUF file size plus KV headroom plus about 10 percent must stay under that budget. The estimate is also marked as a risk if the weights times 1.2 exceed the host's RAM. The estimate is a sizing aid, not a measurement of speed or latency.
+
+## Billing and credits
+
+The page tells you when billing starts for the machine you selected:
+
+- **Billing starts when your endpoint is ready.**
+- **Startup is billed from allocation.** When the plan is not qualified for the model, or the memory fit is not an estimated fit, billing starts when the machine is allocated, within your spend limit and startup timeout. You must tick "I accept this startup cost and risk" to deploy. Startup charges are credited back if a platform or provider failure stops the endpoint from becoming ready. Model failures and stopping the deployment yourself stay billable.
+
+You need enough prepaid credit for the selected machine. If not, the page shows an **Add** link for the missing amount.
+
+Every deployment also has limits, shown under **Edit limits**: a spend cap in dollars (default $10), an idle stop in minutes (default 60, up to 1,440) and a startup timeout in minutes (default 60, up to 120). The deployment stops when it reaches the spend cap or sits idle that long.
+
+For rates, see [Billing](/billing) and [Pricing](https://compute.cx/pricing).
+
+## Call the endpoint
+
+When the deployment is ready, its detail page shows the endpoint URL and a request example. The base URL has this shape:
+
+```text
+https://dep-<id>.api.compute.cx/v1
+```
+
+Requests authenticate with an endpoint key sent as a bearer token:
+
+```text
+Authorization: Bearer <endpoint-token>
+```
+
+The key is shown once. Choose **Reveal endpoint key** on the detail page, copy it immediately, and store it. It cannot be shown again, but you can rotate it, which invalidates the old key and returns a new one once.
+
+For a chat model, the dashboard's own example posts to `/chat/completions` under that base URL, with an OpenAI-style body. The model name is `model`:
+
+```bash
+curl 'https://dep-<id>.api.compute.cx/v1/chat/completions' \
+  -H 'Authorization: Bearer <endpoint-token>' \
+  -H 'Content-Type: application/json' \
+  -d '{"model":"model","messages":[{"role":"user","content":"Hi"}],"max_tokens":512,"stream":false}'
+```
+
+Use the exact URL and request from your deployment's detail page; it fills in your endpoint and a `max_tokens` that fits your limits. The endpoint is described in the code as an OpenAI-subset API, so only rely on the routes the detail page shows.
+
+## Stop the deployment
+
+Choose **Stop deployment** on the detail page and confirm. Requests fail immediately. Billing ends after Compute confirms the machine is gone. If stopping fails, the page says the deployment is still running and billing, and you can try again.
+
+A deployment also ends on its own when it hits the idle timeout or spend cap, or when your balance runs too low. The detail page shows the reason, for example "Stopped after idle timeout" or "Stopped at spend cap".
