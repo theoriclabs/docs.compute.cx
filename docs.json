@@ -70,7 +70,8 @@
         "pages": [
           "guides/fine-tune",
           "guides/rl",
-          "guides/batch"
+          "guides/batch",
+          "guides/deploy-hf-gguf"
         ]
       },
       {
