@@ -123,7 +123,7 @@ curl 'https://dep-<id>.api.compute.cx/v1/chat/completions' \
   -d '{"model":"model","messages":[{"role":"user","content":"Hi"}],"max_tokens":512,"stream":false}'
 ```
 
-Use the exact URL and request from your deployment's detail page; it fills in your endpoint and a `max_tokens` that fits your limits. The endpoint is described in the code as an OpenAI-subset API, so only rely on the routes the detail page shows.
+Use the exact URL and request from your deployment's detail page; it fills in your endpoint and a `max_tokens` that fits your limits. The endpoint implements a subset of the OpenAI API, so rely only on the routes the detail page shows.
 
 ## Stop the deployment
 
